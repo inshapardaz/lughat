@@ -1,0 +1,12 @@
+{
+  "name": "lughat",
+  "private": true,
+  "workspaces": [
+    "apps/shell",
+    "apps/renderer"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
