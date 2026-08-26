@@ -1,0 +1,16 @@
+{
+  "name": "@lughat/shell",
+  "private": true,
+  "version": "0.0.0",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && electron .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "electron": "^37.10.3",
+    "typescript": "^5.5.0"
+  }
+}
