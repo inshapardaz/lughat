@@ -4,7 +4,7 @@ Status: **Go**, with two toolchain decisions to make before Phase 1 starts.
 
 ## What was built
 
-- `apps/engine/Lexroot.Engine.Api` — ASP.NET Core Minimal API on Kestrel. Binds to
+- `apps/engine/Lughat.Engine.Api` — ASP.NET Core Minimal API on Kestrel. Binds to
   `127.0.0.1` on an ephemeral port, prints `READY:<port>` on startup, rejects any request
   without the expected `Authorization: Bearer <token>` header. Indexes a tiny fixture
   StarDict dictionary into an in-memory Lucene.NET index and serves `/api/ping` and
@@ -12,7 +12,7 @@ Status: **Go**, with two toolchain decisions to make before Phase 1 starts.
 - `apps/shell` — Electron main process. Generates the per-launch token, spawns the engine
   with it in the environment, reads the `READY:` line off stdout, opens a `BrowserWindow`
   with `contextIsolation`/`sandbox` on and `nodeIntegration` off, and exposes engine
-  connection info to the renderer through a `contextBridge` preload (`window.lexroot`).
+  connection info to the renderer through a `contextBridge` preload (`window.lughat`).
 - `apps/renderer` — React + Mantine (Vite). A single search box that calls
   `getEngineInfo()` over the bridge, then hits `/api/lookup` directly against the engine's
   loopback URL with the bearer token.

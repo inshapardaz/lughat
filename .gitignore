@@ -16,5 +16,5 @@ obj/
 .DS_Store
 Thumbs.db
 
-# Lexroot runtime data (spike fixtures write here)
+# Lughat runtime data (spike fixtures write here)
 apps/engine/**/index-cache/

@@ -6,12 +6,12 @@ export function useEngineInfo() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!window.lexroot) {
-      setError('window.lexroot is not available — this renderer needs to run inside the Electron shell.');
+    if (!window.lughat) {
+      setError('window.lughat is not available — this renderer needs to run inside the Electron shell.');
       return;
     }
 
-    window.lexroot
+    window.lughat
       .getEngineInfo()
       .then((info) => {
         if (!info) {

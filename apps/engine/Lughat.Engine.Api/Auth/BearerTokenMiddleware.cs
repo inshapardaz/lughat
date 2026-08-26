@@ -1,4 +1,4 @@
-namespace Lexroot.Engine.Api.Auth;
+namespace Lughat.Engine.Api.Auth;
 
 /// <summary>
 /// Rejects any request that doesn't carry the per-launch bearer token handed to the shell

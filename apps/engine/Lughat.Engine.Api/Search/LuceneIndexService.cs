@@ -1,4 +1,4 @@
-using Lexroot.Engine.Api.Formats;
+using Lughat.Engine.Api.Formats;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
@@ -6,7 +6,7 @@ using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 
-namespace Lexroot.Engine.Api.Search;
+namespace Lughat.Engine.Api.Search;
 
 /// <summary>
 /// Spike-quality search index (issue: "Spike: minimal Lucene.NET index + exact/prefix lookup endpoint").

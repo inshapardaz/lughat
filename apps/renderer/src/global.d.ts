@@ -5,7 +5,7 @@ export interface EngineInfo {
 
 declare global {
   interface Window {
-    lexroot: {
+    lughat: {
       getEngineInfo(): Promise<EngineInfo>;
     };
   }

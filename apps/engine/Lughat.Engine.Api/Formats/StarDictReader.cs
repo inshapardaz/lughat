@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Lexroot.Engine.Api.Formats;
+namespace Lughat.Engine.Api.Formats;
 
 /// <summary>
 /// Spike-quality StarDict reader (issue: "Spike: StarDict provider").

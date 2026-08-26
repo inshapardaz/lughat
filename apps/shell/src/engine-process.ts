@@ -28,15 +28,15 @@ export function spawnEngine(): Promise<{ process: ChildProcessWithoutNullStreams
       '..',
       '..',
       'engine',
-      'Lexroot.Engine.Api',
+      'Lughat.Engine.Api',
       'bin',
       'Debug',
       'net9.0',
-      'Lexroot.Engine.Api.dll',
+      'Lughat.Engine.Api.dll',
     );
 
     const child = spawn('dotnet', [enginePath], {
-      env: { ...process.env, LEXROOT_ENGINE_TOKEN: token },
+      env: { ...process.env, LUGHAT_ENGINE_TOKEN: token },
     });
 
     const timeout = setTimeout(() => {

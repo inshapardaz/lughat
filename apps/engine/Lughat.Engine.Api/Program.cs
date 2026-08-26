@@ -1,8 +1,8 @@
 using System.Net;
 using System.Security.Cryptography;
-using Lexroot.Engine.Api.Auth;
-using Lexroot.Engine.Api.Formats;
-using Lexroot.Engine.Api.Search;
+using Lughat.Engine.Api.Auth;
+using Lughat.Engine.Api.Formats;
+using Lughat.Engine.Api.Search;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 
@@ -18,7 +18,7 @@ builder.WebHost.ConfigureKestrel(options =>
 // In the real handshake the shell generates this token and passes it via env var when it
 // spawns the sidecar. Falling back to a generated token lets the sidecar still run standalone
 // (`dotnet run`) for manual testing, per the Phase 0 acceptance criteria.
-var token = Environment.GetEnvironmentVariable("LEXROOT_ENGINE_TOKEN");
+var token = Environment.GetEnvironmentVariable("LUGHAT_ENGINE_TOKEN");
 var tokenWasGenerated = string.IsNullOrEmpty(token);
 if (tokenWasGenerated)
 {
@@ -29,7 +29,7 @@ var app = builder.Build();
 
 app.UseMiddleware<BearerTokenMiddleware>(token!);
 
-app.MapGet("/api/ping", () => Results.Ok(new { status = "ok", service = "Lexroot.Engine.Api" }));
+app.MapGet("/api/ping", () => Results.Ok(new { status = "ok", service = "Lughat.Engine.Api" }));
 
 var indexService = new LuceneIndexService();
 var fixturePath = Path.Combine(AppContext.BaseDirectory, "Fixtures", "spike-dict", "spike-dict.ifo");

@@ -30,4 +30,4 @@ jobs:
         run: npm run build --workspace @lughat/renderer
 
       - name: Build engine
-        run: dotnet build apps/engine/Lexroot.Engine.sln
+        run: dotnet build apps/engine/Lughat.Engine.sln
