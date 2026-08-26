@@ -1,0 +1,20 @@
+# Node
+node_modules/
+dist/
+dist-electron/
+*.tsbuildinfo
+npm-debug.log*
+
+# .NET
+bin/
+obj/
+*.user
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Lexroot runtime data (spike fixtures write here)
+apps/engine/**/index-cache/

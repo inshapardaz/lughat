@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install JS dependencies
+        run: npm install
+
+      - name: Typecheck shell
+        run: npm run typecheck --workspace @lughat/shell
+
+      - name: Build renderer
+        run: npm run build --workspace @lughat/renderer
+
+      - name: Build engine
+        run: dotnet build apps/engine/Lexroot.Engine.sln
