@@ -1,17 +1,48 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
-import type { ChildProcessWithoutNullStreams } from 'node:child_process';
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Tray } from 'electron';
 import path from 'node:path';
-import { EngineInfo, spawnEngine } from './engine-process';
+import { EngineSupervisor } from './engine-supervisor';
 
-let engineProcess: ChildProcessWithoutNullStreams | null = null;
-let engineInfo: EngineInfo | null = null;
+const supervisor = new EngineSupervisor();
+let mainWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
 
-async function createWindow(): Promise<void> {
-  const engine = await spawnEngine();
-  engineProcess = engine.process;
-  engineInfo = engine.info;
+// Single-instance lock: a second launch focuses the existing window instead of spawning a
+// second engine process and a second window.
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
 
-  const win = new BrowserWindow({
+  app.whenReady().then(bootstrap);
+}
+
+async function bootstrap(): Promise<void> {
+  supervisor.onStatusChange((status) => {
+    mainWindow?.webContents.send('engine:status', status);
+  });
+
+  await supervisor.start();
+  createWindow();
+  createTray();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+}
+
+function createWindow(): void {
+  mainWindow = new BrowserWindow({
     width: 1000,
     height: 700,
     webPreferences: {
@@ -22,27 +53,75 @@ async function createWindow(): Promise<void> {
     },
   });
 
-  // Vite dev server in development; the renderer's built output otherwise.
   const devServerUrl = process.env.VITE_DEV_SERVER_URL;
   if (devServerUrl) {
-    await win.loadURL(devServerUrl);
-    win.webContents.openDevTools({ mode: 'detach' });
+    void mainWindow.loadURL(devServerUrl);
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    await win.loadFile(path.resolve(__dirname, '..', '..', 'renderer', 'dist', 'index.html'));
+    void mainWindow.loadFile(path.resolve(__dirname, '..', '..', 'renderer', 'dist', 'index.html'));
   }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
-ipcMain.handle('engine:info', () => engineInfo);
+function createTray(): void {
+  const icon = nativeImage.createFromPath(path.join(__dirname, '..', 'assets', 'tray-icon.png'));
+  tray = new Tray(icon);
+  tray.setToolTip('Lughat');
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      {
+        label: 'Show Lughat',
+        click: () => {
+          mainWindow?.show();
+          mainWindow?.focus();
+        },
+      },
+      { type: 'separator' },
+      { label: 'Quit', click: () => app.quit() },
+    ]),
+  );
+  tray.on('click', () => {
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+}
 
-app.whenReady().then(createWindow);
+ipcMain.handle('engine:info', () => supervisor.getInfo());
+
+ipcMain.handle('dictionary:pick-file', async () => {
+  if (!mainWindow) {
+    return null;
+  }
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Import dictionary',
+    properties: ['openFile'],
+    filters: [
+      { name: 'Dictionary files', extensions: ['ifo', 'mdx', 'csv', 'tsv', 'txt'] },
+      { name: 'All files', extensions: ['*'] },
+    ],
+  });
+
+  return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
+});
 
 app.on('window-all-closed', () => {
-  engineProcess?.kill();
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
-app.on('before-quit', () => {
-  engineProcess?.kill();
+let quitting = false;
+app.on('before-quit', async (event) => {
+  if (quitting) {
+    return;
+  }
+
+  event.preventDefault();
+  quitting = true;
+  await supervisor.shutdown();
+  app.quit();
 });
