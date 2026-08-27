@@ -1,0 +1,21 @@
+/* Bundled locally (not loaded from a CDN) so switching to Urdu still works fully offline —
+   spec §10 / §1's offline-first goal. SIL Open Font License — see assets/fonts/OFL.txt. */
+@font-face {
+  font-family: 'Noto Nastaliq Urdu';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/NotoNastaliqUrdu-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Nastaliq Urdu';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/NotoNastaliqUrdu-Bold.ttf') format('truetype');
+}
+
+html[lang='ur'] {
+  font-family: 'Noto Nastaliq Urdu', 'Segoe UI', sans-serif;
+}

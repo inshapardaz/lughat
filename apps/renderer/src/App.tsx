@@ -1,70 +1,70 @@
-import { useState } from 'react';
-import { AppShell, Alert, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
+import { useEffect } from 'react';
+import { Alert, Center, Loader, Stack, Text, useDirection } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
+import { AppShellLayout } from './components/AppShellLayout';
+import { directionFor } from './i18n';
+import { useAppStore } from './store';
 import { useEngineInfo } from './useEngineInfo';
-import type { LookupResult } from './api';
-import { lookup } from './api';
 
 export default function App() {
-  const { engineInfo, error: engineError } = useEngineInfo();
-  const [term, setTerm] = useState('');
-  const [results, setResults] = useState<LookupResult[]>([]);
-  const [searchError, setSearchError] = useState<string | null>(null);
+  const { t } = useTranslation();
+  const { engineInfo, connected, error } = useEngineInfo();
+  const setEngineInfo = useAppStore((s) => s.setEngineInfo);
+  const setEngineConnected = useAppStore((s) => s.setEngineConnected);
+  const loadPersistedSettings = useAppStore((s) => s.loadPersistedSettings);
+  const connectEvents = useAppStore((s) => s.connectEvents);
+  const language = useAppStore((s) => s.language);
+  const { setDirection } = useDirection();
 
-  async function handleChange(value: string) {
-    setTerm(value);
-    setSearchError(null);
+  // Mirrors the whole Mantine shell for RTL languages — this is the one place direction
+  // actually gets applied; Mantine's own context is the source of truth, not the DOM
+  // attribute directly (see the comment on store.ts's setLanguage).
+  useEffect(() => {
+    setDirection(directionFor(language));
+    document.documentElement.lang = language;
+  }, [language, setDirection]);
 
-    if (!engineInfo || value.trim().length === 0) {
-      setResults([]);
-      return;
+  useEffect(() => {
+    if (engineInfo) {
+      setEngineInfo(engineInfo);
     }
+  }, [engineInfo, setEngineInfo]);
 
-    try {
-      setResults(await lookup(engineInfo, value.trim(), 'prefix'));
-    } catch (err) {
-      setSearchError(err instanceof Error ? err.message : 'Lookup failed.');
+  useEffect(() => {
+    setEngineConnected(connected);
+  }, [connected, setEngineConnected]);
+
+  useEffect(() => {
+    if (engineInfo && connected) {
+      void loadPersistedSettings();
+      connectEvents();
     }
+    // Only re-run when the engine (re)connects, not on every store re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engineInfo, connected]);
+
+  if (error) {
+    return (
+      <Center h="100vh">
+        <Alert color="red" title={t('search.connectionFailed')}>
+          {error}
+        </Alert>
+      </Center>
+    );
   }
 
-  return (
-    <AppShell header={{ height: 60 }} padding="md">
-      <AppShell.Header p="md">
-        <Title order={3}>Lughat — spike search</Title>
-      </AppShell.Header>
-      <AppShell.Main>
-        <Stack maw={480} mx="auto" mt="xl" gap="md">
-          {engineError && <Alert color="red" title="Engine connection failed">{engineError}</Alert>}
-          {!engineInfo && !engineError && (
-            <Stack align="center" gap="xs">
-              <Loader size="sm" />
-              <Text c="dimmed" size="sm">Connecting to the dictionary engine…</Text>
-            </Stack>
-          )}
-          {engineInfo && (
-            <>
-              <TextInput
-                label="Search"
-                placeholder="Try “apple”, “book” or “cat”"
-                value={term}
-                onChange={(event) => handleChange(event.currentTarget.value)}
-                autoFocus
-              />
-              {searchError && <Alert color="red">{searchError}</Alert>}
-              <Stack gap="sm">
-                {results.map((result) => (
-                  <Stack key={result.headword} gap={2}>
-                    <Text fw={600}>{result.headword}</Text>
-                    <Text c="dimmed">{result.article}</Text>
-                  </Stack>
-                ))}
-                {term.trim().length > 0 && results.length === 0 && !searchError && (
-                  <Text c="dimmed" size="sm">No matches yet.</Text>
-                )}
-              </Stack>
-            </>
-          )}
+  if (!engineInfo) {
+    return (
+      <Center h="100vh">
+        <Stack align="center" gap="xs">
+          <Loader size="sm" />
+          <Text c="dimmed" size="sm">
+            {t('search.connecting')}
+          </Text>
         </Stack>
-      </AppShell.Main>
-    </AppShell>
-  );
+      </Center>
+    );
+  }
+
+  return <AppShellLayout />;
 }
