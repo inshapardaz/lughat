@@ -1,7 +1,11 @@
 using System.Net;
 using System.Security.Cryptography;
+using Lughat.Engine.Api;
+using Lughat.Engine.Api.Api;
 using Lughat.Engine.Api.Auth;
+using Lughat.Engine.Api.Data;
 using Lughat.Engine.Api.Formats;
+using Lughat.Engine.Api.Realtime;
 using Lughat.Engine.Api.Search;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -17,7 +21,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
 // In the real handshake the shell generates this token and passes it via env var when it
 // spawns the sidecar. Falling back to a generated token lets the sidecar still run standalone
-// (`dotnet run`) for manual testing, per the Phase 0 acceptance criteria.
+// (`dotnet run`) for manual testing.
 var token = Environment.GetEnvironmentVariable("LUGHAT_ENGINE_TOKEN");
 var tokenWasGenerated = string.IsNullOrEmpty(token);
 if (tokenWasGenerated)
@@ -25,21 +29,56 @@ if (tokenWasGenerated)
     token = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
 }
 
+var appDataRoot = AppPaths.GetAppDataRoot();
+var database = new AppDatabase(Path.Combine(appDataRoot, "db", "app.db"));
+database.Migrate();
+
+var providerRegistry = new DictionaryProviderRegistry()
+    .Register(new StarDictProvider())
+    .Register(new WordListProvider())
+    .Register(new MdxProvider());
+
+builder.Services.AddSingleton(providerRegistry);
+builder.Services.AddSingleton(database);
+builder.Services.AddSingleton<DictionaryRepository>();
+builder.Services.AddSingleton<GroupRepository>();
+builder.Services.AddSingleton<HistoryRepository>();
+builder.Services.AddSingleton<FavoriteRepository>();
+builder.Services.AddSingleton<SettingsRepository>();
+builder.Services.AddSingleton(new IndexingService(Path.Combine(appDataRoot, "index")));
+builder.Services.AddSingleton<SearchService>();
+builder.Services.AddSingleton<EventHub>();
+builder.Services.AddSingleton<DictionaryImportService>();
+
 var app = builder.Build();
 
 app.UseMiddleware<BearerTokenMiddleware>(token!);
+app.UseWebSockets();
+
+app.MapDictionaryEndpoints();
+app.MapLookupEndpoints();
+app.MapMediaEndpoints();
+app.MapSettingsEndpoints();
 
 app.MapGet("/api/ping", () => Results.Ok(new { status = "ok", service = "Lughat.Engine.Api" }));
 
-var indexService = new LuceneIndexService();
-var fixturePath = Path.Combine(AppContext.BaseDirectory, "Fixtures", "spike-dict", "spike-dict.ifo");
-if (File.Exists(fixturePath))
+app.MapPost("/api/shutdown", (IHostApplicationLifetime lifetime) =>
 {
-    indexService.Build(StarDictReader.Read(fixturePath));
-}
+    lifetime.StopApplication();
+    return Results.NoContent();
+});
 
-app.MapGet("/api/lookup", (string term, string? mode) =>
-    Results.Ok(indexService.Lookup(term, mode ?? "exact")));
+app.Map("/ws", async (HttpContext context, EventHub eventHub) =>
+{
+    if (!context.WebSockets.IsWebSocketRequest)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        return;
+    }
+
+    using var socket = await context.WebSockets.AcceptWebSocketAsync();
+    await eventHub.HandleConnectionAsync(socket, context.RequestAborted);
+});
 
 app.Start();
 
