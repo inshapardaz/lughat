@@ -1,175 +1,175 @@
-using Dapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lughat.Engine.Api.Data;
 
-public sealed class DictionaryRepository(AppDatabase db)
+public sealed class DictionaryRepository(LughatDbContext db)
 {
-    // SQLite has no native boolean type — Microsoft.Data.Sqlite reports the Enabled column
-    // as Int64, and Dapper's fast record-constructor materializer requires an exact type
-    // match, so it can't bind that straight into `bool Enabled` on DictionaryRecord. This
-    // row type mirrors the raw column types; List/Find map it to the public record.
-    private sealed record DictionaryRow(
-        string Id, string Name, string Format, string FilePath, string ContentHash,
-        long Enabled, string? GroupId, long SortOrder, string? IndexedAt)
+    public IReadOnlyList<DictionaryEntity> List() =>
+        db.Dictionaries.AsNoTracking().OrderBy(d => d.GroupId).ThenBy(d => d.SortOrder).ToList();
+
+    public DictionaryEntity? Find(string id) =>
+        db.Dictionaries.AsNoTracking().FirstOrDefault(d => d.Id == id);
+
+    public DictionaryEntity Insert(string name, string format, string filePath, string contentHash)
     {
-        public DictionaryRecord ToRecord() => new(Id, Name, Format, FilePath, ContentHash, Enabled != 0, GroupId, (int)SortOrder, IndexedAt);
-    }
+        var nextSortOrder = (db.Dictionaries.Select(d => (int?)d.SortOrder).Max() ?? -1) + 1;
 
-    public IReadOnlyList<DictionaryRecord> List()
-    {
-        using var connection = db.OpenConnection();
-        return connection.Query<DictionaryRow>(
-            "SELECT Id, Name, Format, FilePath, ContentHash, Enabled, GroupId, SortOrder, IndexedAt " +
-            "FROM Dictionaries ORDER BY GroupId, SortOrder").Select(row => row.ToRecord()).ToList();
-    }
+        var entity = new DictionaryEntity
+        {
+            Id = Guid.NewGuid().ToString("n"),
+            Name = name,
+            Format = format,
+            FilePath = filePath,
+            ContentHash = contentHash,
+            Enabled = true,
+            GroupId = null,
+            SortOrder = nextSortOrder,
+            IndexedAt = null,
+        };
 
-    public DictionaryRecord? Find(string id)
-    {
-        using var connection = db.OpenConnection();
-        return connection.QuerySingleOrDefault<DictionaryRow>(
-            "SELECT Id, Name, Format, FilePath, ContentHash, Enabled, GroupId, SortOrder, IndexedAt " +
-            "FROM Dictionaries WHERE Id = @id", new { id })?.ToRecord();
-    }
-
-    public DictionaryRecord Insert(string name, string format, string filePath, string contentHash)
-    {
-        using var connection = db.OpenConnection();
-        var nextSortOrder = connection.ExecuteScalar<int>(
-            "SELECT COALESCE(MAX(SortOrder), -1) + 1 FROM Dictionaries");
-
-        var record = new DictionaryRecord(
-            Id: Guid.NewGuid().ToString("n"),
-            Name: name,
-            Format: format,
-            FilePath: filePath,
-            ContentHash: contentHash,
-            Enabled: true,
-            GroupId: null,
-            SortOrder: nextSortOrder,
-            IndexedAt: null);
-
-        connection.Execute(
-            "INSERT INTO Dictionaries (Id, Name, Format, FilePath, ContentHash, Enabled, GroupId, SortOrder, IndexedAt) " +
-            "VALUES (@Id, @Name, @Format, @FilePath, @ContentHash, @Enabled, @GroupId, @SortOrder, @IndexedAt)",
-            record);
-
-        return record;
+        db.Dictionaries.Add(entity);
+        db.SaveChanges();
+        return entity;
     }
 
     public void MarkIndexed(string id, string indexedAtIso)
     {
-        using var connection = db.OpenConnection();
-        connection.Execute("UPDATE Dictionaries SET IndexedAt = @indexedAtIso WHERE Id = @id", new { id, indexedAtIso });
+        var entity = db.Dictionaries.FirstOrDefault(d => d.Id == id);
+        if (entity is null)
+        {
+            return;
+        }
+
+        entity.IndexedAt = indexedAtIso;
+        db.SaveChanges();
     }
 
     public void SetEnabled(string id, bool enabled)
     {
-        using var connection = db.OpenConnection();
-        connection.Execute("UPDATE Dictionaries SET Enabled = @enabled WHERE Id = @id", new { id, enabled });
+        var entity = db.Dictionaries.FirstOrDefault(d => d.Id == id);
+        if (entity is null)
+        {
+            return;
+        }
+
+        entity.Enabled = enabled;
+        db.SaveChanges();
     }
 
     public void UpdateOrder(string id, string? groupId, int sortOrder)
     {
-        using var connection = db.OpenConnection();
-        connection.Execute(
-            "UPDATE Dictionaries SET GroupId = @groupId, SortOrder = @sortOrder WHERE Id = @id",
-            new { id, groupId, sortOrder });
+        var entity = db.Dictionaries.FirstOrDefault(d => d.Id == id);
+        if (entity is null)
+        {
+            return;
+        }
+
+        entity.GroupId = groupId;
+        entity.SortOrder = sortOrder;
+        db.SaveChanges();
     }
 
     public bool Delete(string id)
     {
-        using var connection = db.OpenConnection();
-        var affected = connection.Execute("DELETE FROM Dictionaries WHERE Id = @id", new { id });
-        return affected > 0;
+        var entity = db.Dictionaries.FirstOrDefault(d => d.Id == id);
+        if (entity is null)
+        {
+            return false;
+        }
+
+        // History/Favorites rows for this dictionary cascade-delete — see LughatDbContext's
+        // OnModelCreating; they're meaningless without the dictionary they reference.
+        db.Dictionaries.Remove(entity);
+        db.SaveChanges();
+        return true;
     }
 }
 
-public sealed class GroupRepository(AppDatabase db)
+public sealed class GroupRepository(LughatDbContext db)
 {
-    // Same Int64-vs-int mismatch as DictionaryRow above.
-    private sealed record GroupRow(string Id, string Name, long SortOrder)
-    {
-        public GroupRecord ToRecord() => new(Id, Name, (int)SortOrder);
-    }
+    public IReadOnlyList<GroupEntity> List() =>
+        db.Groups.AsNoTracking().OrderBy(g => g.SortOrder).ToList();
 
-    public IReadOnlyList<GroupRecord> List()
+    public GroupEntity Create(string name)
     {
-        using var connection = db.OpenConnection();
-        return connection.Query<GroupRow>("SELECT Id, Name, SortOrder FROM Groups ORDER BY SortOrder")
-            .Select(row => row.ToRecord()).ToList();
-    }
-
-    public GroupRecord Create(string name)
-    {
-        using var connection = db.OpenConnection();
-        var nextSortOrder = connection.ExecuteScalar<int>("SELECT COALESCE(MAX(SortOrder), -1) + 1 FROM Groups");
-        var record = new GroupRecord(Guid.NewGuid().ToString("n"), name, nextSortOrder);
-        connection.Execute("INSERT INTO Groups (Id, Name, SortOrder) VALUES (@Id, @Name, @SortOrder)", record);
-        return record;
+        var nextSortOrder = (db.Groups.Select(g => (int?)g.SortOrder).Max() ?? -1) + 1;
+        var entity = new GroupEntity { Id = Guid.NewGuid().ToString("n"), Name = name, SortOrder = nextSortOrder };
+        db.Groups.Add(entity);
+        db.SaveChanges();
+        return entity;
     }
 }
 
-public sealed class HistoryRepository(AppDatabase db)
+public sealed class HistoryRepository(LughatDbContext db)
 {
     public void Record(string term, string dictionaryId, string timestampIso)
     {
-        using var connection = db.OpenConnection();
-        connection.Execute(
-            "INSERT INTO History (Id, Term, DictionaryId, Timestamp) VALUES (@Id, @Term, @DictionaryId, @Timestamp)",
-            new HistoryRecord(Guid.NewGuid().ToString("n"), term, dictionaryId, timestampIso));
+        db.History.Add(new HistoryEntity
+        {
+            Id = Guid.NewGuid().ToString("n"),
+            Term = term,
+            DictionaryId = dictionaryId,
+            Timestamp = timestampIso,
+        });
+        db.SaveChanges();
     }
 
-    public IReadOnlyList<HistoryRecord> Recent(int limit = 50)
-    {
-        using var connection = db.OpenConnection();
-        return connection.Query<HistoryRecord>(
-            "SELECT Id, Term, DictionaryId, Timestamp FROM History ORDER BY Timestamp DESC LIMIT @limit",
-            new { limit }).AsList();
-    }
+    public IReadOnlyList<HistoryEntity> Recent(int limit = 50) =>
+        db.History.AsNoTracking().OrderByDescending(h => h.Timestamp).Take(limit).ToList();
 }
 
-public sealed class FavoriteRepository(AppDatabase db)
+public sealed class FavoriteRepository(LughatDbContext db)
 {
-    public FavoriteRecord Add(string term, string dictionaryId, string? tag, string createdAtIso)
+    public FavoriteEntity Add(string term, string dictionaryId, string? tag, string createdAtIso)
     {
-        using var connection = db.OpenConnection();
-        var record = new FavoriteRecord(Guid.NewGuid().ToString("n"), term, dictionaryId, tag, createdAtIso);
-        connection.Execute(
-            "INSERT INTO Favorites (Id, Term, DictionaryId, Tag, CreatedAt) VALUES (@Id, @Term, @DictionaryId, @Tag, @CreatedAt)",
-            record);
-        return record;
+        var entity = new FavoriteEntity
+        {
+            Id = Guid.NewGuid().ToString("n"),
+            Term = term,
+            DictionaryId = dictionaryId,
+            Tag = tag,
+            CreatedAt = createdAtIso,
+        };
+
+        db.Favorites.Add(entity);
+        db.SaveChanges();
+        return entity;
     }
 
-    public IReadOnlyList<FavoriteRecord> List()
-    {
-        using var connection = db.OpenConnection();
-        return connection.Query<FavoriteRecord>(
-            "SELECT Id, Term, DictionaryId, Tag, CreatedAt FROM Favorites ORDER BY CreatedAt DESC").AsList();
-    }
+    public IReadOnlyList<FavoriteEntity> List() =>
+        db.Favorites.AsNoTracking().OrderByDescending(f => f.CreatedAt).ToList();
 
     public bool Remove(string id)
     {
-        using var connection = db.OpenConnection();
-        var affected = connection.Execute("DELETE FROM Favorites WHERE Id = @id", new { id });
-        return affected > 0;
+        var entity = db.Favorites.FirstOrDefault(f => f.Id == id);
+        if (entity is null)
+        {
+            return false;
+        }
+
+        db.Favorites.Remove(entity);
+        db.SaveChanges();
+        return true;
     }
 }
 
-public sealed class SettingsRepository(AppDatabase db)
+public sealed class SettingsRepository(LughatDbContext db)
 {
-    public string? Get(string key)
-    {
-        using var connection = db.OpenConnection();
-        return connection.QuerySingleOrDefault<string?>(
-            "SELECT ValueJson FROM Settings WHERE Key = @key", new { key });
-    }
+    public string? Get(string key) =>
+        db.Settings.AsNoTracking().FirstOrDefault(s => s.Key == key)?.ValueJson;
 
     public void Set(string key, string valueJson)
     {
-        using var connection = db.OpenConnection();
-        connection.Execute(
-            "INSERT INTO Settings (Key, ValueJson) VALUES (@key, @valueJson) " +
-            "ON CONFLICT(Key) DO UPDATE SET ValueJson = @valueJson",
-            new { key, valueJson });
+        var existing = db.Settings.FirstOrDefault(s => s.Key == key);
+        if (existing is null)
+        {
+            db.Settings.Add(new SettingEntity { Key = key, ValueJson = valueJson });
+        }
+        else
+        {
+            existing.ValueJson = valueJson;
+        }
+
+        db.SaveChanges();
     }
 }

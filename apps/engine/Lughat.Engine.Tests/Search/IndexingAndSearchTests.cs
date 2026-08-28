@@ -7,6 +7,7 @@ namespace Lughat.Engine.Tests.Search;
 public class IndexingAndSearchTests : IDisposable
 {
     private readonly string _tempDir;
+    private readonly LughatDbContext _db;
     private readonly DictionaryRepository _dictionaries;
     private readonly IndexingService _indexing;
     private readonly SearchService _search;
@@ -14,15 +15,15 @@ public class IndexingAndSearchTests : IDisposable
     public IndexingAndSearchTests()
     {
         _tempDir = Path.Combine(Path.GetTempPath(), "lughat-tests-" + Guid.NewGuid().ToString("n"));
-        var database = new AppDatabase(Path.Combine(_tempDir, "db", "app.db"));
-        database.Migrate();
-        _dictionaries = new DictionaryRepository(database);
+        _db = TestDb.CreateMigrated(Path.Combine(_tempDir, "db", "app.db"));
+        _dictionaries = new DictionaryRepository(_db);
         _indexing = new IndexingService(Path.Combine(_tempDir, "index"));
         _search = new SearchService(_indexing, _dictionaries);
     }
 
     public void Dispose()
     {
+        _db.Dispose();
         try
         {
             Directory.Delete(_tempDir, recursive: true);
