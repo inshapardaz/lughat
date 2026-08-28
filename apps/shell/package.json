@@ -2,16 +2,41 @@
   "name": "@lughat/shell",
   "private": true,
   "version": "0.0.0",
+  "description": "Lughat — a cross-platform offline dictionary reader",
+  "author": "Inshapardaz",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "npm run build && electron .",
+    "copy-renderer": "node scripts/copy-renderer.mjs",
+    "start": "npm run build && npm run copy-renderer && electron .",
     "dev": "npm run build && wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron --inspect=5858 .",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "package": "npm run build && npm run copy-renderer && electron-builder"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "electron": "^37.10.3",
+    "electron": "37.10.3",
+    "electron-builder": "^26.15.3",
     "typescript": "^5.5.0"
+  },
+  "build": {
+    "appId": "org.inshapardaz.lughat",
+    "productName": "Lughat",
+    "directories": {
+      "output": "release"
+    },
+    "files": ["dist/**/*", "renderer-dist/**/*", "assets/**/*", "package.json"],
+    "win": {
+      "target": ["nsis", "msi"],
+      "extraResources": [{ "from": "../engine/publish/win-x64", "to": "engine" }]
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "extraResources": [{ "from": "../engine/publish/osx-${arch}", "to": "engine" }]
+    },
+    "linux": {
+      "target": ["AppImage", "deb", "rpm"],
+      "extraResources": [{ "from": "../engine/publish/linux-x64", "to": "engine" }]
+    }
   }
 }

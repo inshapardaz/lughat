@@ -58,7 +58,9 @@ function createWindow(): void {
     void mainWindow.loadURL(devServerUrl);
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    void mainWindow.loadFile(path.resolve(__dirname, '..', '..', 'renderer', 'dist', 'index.html'));
+    // Copied in by scripts/copy-renderer.mjs, which both `npm run start` and the
+    // electron-builder packaging step run before this ever loads.
+    void mainWindow.loadFile(path.resolve(__dirname, '..', 'renderer-dist', 'index.html'));
   }
 
   mainWindow.on('closed', () => {
