@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Alert, Center, Loader, Stack, Text, useDirection } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { AppShellLayout } from './components/AppShellLayout';
+import { PopupView } from './components/PopupView';
 import { directionFor } from './i18n';
 import { useAppStore } from './store';
 import { useEngineInfo } from './useEngineInfo';
@@ -66,5 +67,5 @@ export default function App() {
     );
   }
 
-  return <AppShellLayout />;
+  return window.location.hash.startsWith('#/popup') ? <PopupView /> : <AppShellLayout />;
 }

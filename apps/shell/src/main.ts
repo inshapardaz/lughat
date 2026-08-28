@@ -1,7 +1,14 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Tray } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeImage, Tray } from 'electron';
 import path from 'node:path';
 import { EngineSupervisor } from './engine-supervisor';
 import { getPortableDataDir } from './portable';
+import { createPopupWindow } from './popup';
+import {
+  isClipboardMonitoringEnabled,
+  registerGlobalHotkey,
+  setClipboardMonitoringEnabled,
+  unregisterGlobalHotkey,
+} from './quick-lookup';
 
 const supervisor = new EngineSupervisor();
 let mainWindow: BrowserWindow | null = null;
@@ -43,6 +50,15 @@ async function bootstrap(): Promise<void> {
   createWindow();
   createTray();
 
+  // Global hotkey to summon the popup from anywhere in the OS (spec §6). A failed
+  // registration (accelerator already taken, or Electron's globalShortcut being a known
+  // no-op under Wayland — spec §15's documented gap) just means the hotkey silently doesn't
+  // fire; the tray's "Look up clipboard" item and clipboard monitoring stay available either
+  // way as a fallback path into the same popup.
+  if (!registerGlobalHotkey()) {
+    console.error('[hotkey] failed to register the default global hotkey.');
+  }
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -81,7 +97,15 @@ function createTray(): void {
   const icon = nativeImage.createFromPath(path.join(__dirname, '..', 'assets', 'tray-icon.png'));
   tray = new Tray(icon);
   tray.setToolTip('Lughat');
-  tray.setContextMenu(
+  refreshTrayMenu();
+  tray.on('click', () => {
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+}
+
+function refreshTrayMenu(): void {
+  tray?.setContextMenu(
     Menu.buildFromTemplate([
       {
         label: 'Show Lughat',
@@ -91,13 +115,20 @@ function createTray(): void {
         },
       },
       { type: 'separator' },
+      { label: 'Look up clipboard', click: () => createPopupWindow(clipboard.readText()) },
+      {
+        label: 'Monitor clipboard',
+        type: 'checkbox',
+        checked: isClipboardMonitoringEnabled(),
+        click: (item) => {
+          setClipboardMonitoringEnabled(item.checked);
+          refreshTrayMenu();
+        },
+      },
+      { type: 'separator' },
       { label: 'Quit', click: () => app.quit() },
     ]),
   );
-  tray.on('click', () => {
-    mainWindow?.show();
-    mainWindow?.focus();
-  });
 }
 
 ipcMain.handle('engine:info', () => supervisor.getInfo());
@@ -123,6 +154,11 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('will-quit', () => {
+  unregisterGlobalHotkey();
+  setClipboardMonitoringEnabled(false);
 });
 
 let quitting = false;
