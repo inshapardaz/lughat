@@ -1,10 +1,19 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Tray } from 'electron';
 import path from 'node:path';
 import { EngineSupervisor } from './engine-supervisor';
+import { getPortableDataDir } from './portable';
 
 const supervisor = new EngineSupervisor();
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+
+// Portable mode (spec §6) also redirects Electron's own internal storage (cache, cookies,
+// etc.) alongside the engine's — see engine-process.ts for the engine's side of this. Must
+// happen before app.whenReady() for Electron to actually honor the new path.
+const portableDataDir = getPortableDataDir();
+if (portableDataDir) {
+  app.setPath('userData', path.join(portableDataDir, 'electron'));
+}
 
 // Single-instance lock: a second launch focuses the existing window instead of spawning a
 // second engine process and a second window.
