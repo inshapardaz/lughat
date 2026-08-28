@@ -7,6 +7,12 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "dotnet build apps/engine/Lughat.Engine.sln && concurrently -k -n renderer,shell \"npm run dev --workspace @lughat/renderer\" \"npm run dev --workspace @lughat/shell\""
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "cross-env": "^10.1.0",
+    "wait-on": "^9.1.0"
   }
 }

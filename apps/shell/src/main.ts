@@ -26,6 +26,7 @@ async function createWindow(): Promise<void> {
   const devServerUrl = process.env.VITE_DEV_SERVER_URL;
   if (devServerUrl) {
     await win.loadURL(devServerUrl);
+    win.webContents.openDevTools({ mode: 'detach' });
   } else {
     await win.loadFile(path.resolve(__dirname, '..', '..', 'renderer', 'dist', 'index.html'));
   }
