@@ -44,23 +44,21 @@ public sealed class DictionaryImportService(
                     record.Id,
                     contentHash,
                     provider.ReadEntries(record.FilePath),
-                    onProgress: e => _ = eventHub.BroadcastAsync(new
-                    {
-                        type = e.Complete ? "index-complete" : "index-progress",
-                        dictId = e.DictionaryId,
-                        percent = e.Percent,
-                    })));
+                    onProgress: e => _ = eventHub.BroadcastAsync(new EngineEventMessage(
+                        Type: e.Complete ? "index-complete" : "index-progress",
+                        DictId: e.DictionaryId,
+                        Percent: e.Percent))));
             }
             else
             {
-                await eventHub.BroadcastAsync(new { type = "index-complete", dictId = record.Id, percent = 100 });
+                await eventHub.BroadcastAsync(new EngineEventMessage("index-complete", record.Id, Percent: 100));
             }
 
             dictionaryRepository.MarkIndexed(record.Id, DateTimeOffset.UtcNow.ToString("O"));
         }
         catch (DictionaryFormatException ex)
         {
-            await eventHub.BroadcastAsync(new { type = "index-error", dictId = record.Id, error = ex.ErrorCode });
+            await eventHub.BroadcastAsync(new EngineEventMessage("index-error", record.Id, Error: ex.ErrorCode));
         }
     }
 }

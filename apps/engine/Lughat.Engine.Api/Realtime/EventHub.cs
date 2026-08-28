@@ -1,7 +1,11 @@
 using System.Net.WebSockets;
 using System.Text.Json;
+using Lughat.Engine.Api.Api;
 
 namespace Lughat.Engine.Api.Realtime;
+
+/// <summary>One message shape for every WS push event — index-progress/-complete/-error.</summary>
+public sealed record EngineEventMessage(string Type, string DictId, int? Percent = null, string? Error = null);
 
 /// <summary>
 /// Broadcasts push events (indexing progress, etc.) to every connected WebSocket client —
@@ -48,9 +52,9 @@ public sealed class EventHub
         }
     }
 
-    public async Task BroadcastAsync(object payload)
+    public async Task BroadcastAsync(EngineEventMessage message)
     {
-        var json = JsonSerializer.SerializeToUtf8Bytes(payload);
+        var json = JsonSerializer.SerializeToUtf8Bytes(message, AppJsonContext.Default.EngineEventMessage);
 
         List<WebSocket> snapshot;
         lock (_lock)

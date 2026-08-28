@@ -50,6 +50,14 @@ builder.Services.AddSingleton<SearchService>();
 builder.Services.AddSingleton<EventHub>();
 builder.Services.AddSingleton<DictionaryImportService>();
 
+// Source-gen only, no reflection fallback — see AppJsonContext's doc comment. This makes a
+// missing-type mistake fail immediately in ordinary `dotnet run`, not just in a trimmed
+// publish.
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolver = AppJsonContext.Default;
+});
+
 var app = builder.Build();
 
 app.UseMiddleware<BearerTokenMiddleware>(token!);
@@ -60,7 +68,7 @@ app.MapLookupEndpoints();
 app.MapMediaEndpoints();
 app.MapSettingsEndpoints();
 
-app.MapGet("/api/ping", () => Results.Ok(new { status = "ok", service = "Lughat.Engine.Api" }));
+app.MapGet("/api/ping", () => Results.Ok(new PingResponse("ok", "Lughat.Engine.Api")));
 
 app.MapPost("/api/shutdown", (IHostApplicationLifetime lifetime) =>
 {

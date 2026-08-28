@@ -8,7 +8,7 @@ public static class DictionaryEndpoints
     public static void MapDictionaryEndpoints(this WebApplication app)
     {
         app.MapGet("/api/dictionaries", (DictionaryRepository dictionaries, GroupRepository groups) =>
-            Results.Ok(new { dictionaries = dictionaries.List(), groups = groups.List() }));
+            Results.Ok(new DictionariesResponse(dictionaries.List(), groups.List())));
 
         app.MapPost("/api/dictionaries", (ImportRequest request, DictionaryImportService importService) =>
         {

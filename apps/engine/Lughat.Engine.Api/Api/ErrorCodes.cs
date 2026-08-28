@@ -15,5 +15,5 @@ public static class ErrorCodes
     public const string MediaNotFound = "media.not_found";
 
     public static IResult Problem(string code, string detail, int statusCode = StatusCodes.Status400BadRequest) =>
-        Results.Json(new { error = code, detail }, statusCode: statusCode);
+        Results.Json(new ErrorResponse(code, detail), AppJsonContext.Default.ErrorResponse, statusCode: statusCode);
 }
