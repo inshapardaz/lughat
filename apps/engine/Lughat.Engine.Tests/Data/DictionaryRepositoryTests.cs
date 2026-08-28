@@ -5,19 +5,23 @@ namespace Lughat.Engine.Tests.Data;
 public class DictionaryRepositoryTests : IDisposable
 {
     private readonly string _dbPath;
+    private readonly LughatDbContext _db;
     private readonly DictionaryRepository _repository;
     private readonly GroupRepository _groups;
 
     public DictionaryRepositoryTests()
     {
-        _dbPath = Path.Combine(Path.GetTempPath(), "lughat-tests-" + Guid.NewGuid().ToString("n") + ".db");
-        var database = new AppDatabase(_dbPath);
-        database.Migrate();
-        _repository = new DictionaryRepository(database);
-        _groups = new GroupRepository(database);
+        _dbPath = TestDb.NewTempDbPath();
+        _db = TestDb.CreateMigrated(_dbPath);
+        _repository = new DictionaryRepository(_db);
+        _groups = new GroupRepository(_db);
     }
 
-    public void Dispose() => File.Delete(_dbPath);
+    public void Dispose()
+    {
+        _db.Dispose();
+        File.Delete(_dbPath);
+    }
 
     [Fact]
     public void Insert_then_List_round_trips_all_fields()

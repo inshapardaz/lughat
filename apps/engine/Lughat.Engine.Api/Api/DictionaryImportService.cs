@@ -14,9 +14,10 @@ public sealed class DictionaryImportService(
     DictionaryProviderRegistry providers,
     DictionaryRepository dictionaryRepository,
     IndexingService indexingService,
-    EventHub eventHub)
+    EventHub eventHub,
+    IServiceScopeFactory scopeFactory)
 {
-    public DictionaryRecord Import(string filePath)
+    public DictionaryEntity Import(string filePath)
     {
         if (!File.Exists(filePath))
         {
@@ -28,22 +29,30 @@ public sealed class DictionaryImportService(
 
         var contentHash = IndexingService.ComputeContentHash(filePath);
         var name = Path.GetFileNameWithoutExtension(filePath);
-        var record = dictionaryRepository.Insert(name, provider.FormatId, filePath, contentHash);
+        // Uses the request-scoped repository directly — this part runs synchronously within
+        // the HTTP request that's importing the dictionary.
+        var entity = dictionaryRepository.Insert(name, provider.FormatId, filePath, contentHash);
 
-        _ = IndexInBackgroundAsync(record, provider, contentHash);
-        return record;
+        _ = IndexInBackgroundAsync(entity, provider, contentHash);
+        return entity;
     }
 
-    private async Task IndexInBackgroundAsync(DictionaryRecord record, IDictionaryProvider provider, string contentHash)
+    private async Task IndexInBackgroundAsync(DictionaryEntity entity, IDictionaryProvider provider, string contentHash)
     {
+        // Indexing outlives the HTTP request that triggered it, so it can't use the
+        // request's DbContext (scoped services get disposed when the request ends) — this
+        // creates its own scope, independent of whatever scope Import() was called from.
+        using var scope = scopeFactory.CreateScope();
+        var scopedDictionaries = scope.ServiceProvider.GetRequiredService<DictionaryRepository>();
+
         try
         {
             if (!indexingService.IsIndexed(contentHash))
             {
                 await Task.Run(() => indexingService.BuildIndex(
-                    record.Id,
+                    entity.Id,
                     contentHash,
-                    provider.ReadEntries(record.FilePath),
+                    provider.ReadEntries(entity.FilePath),
                     onProgress: e => _ = eventHub.BroadcastAsync(new EngineEventMessage(
                         Type: e.Complete ? "index-complete" : "index-progress",
                         DictId: e.DictionaryId,
@@ -51,14 +60,14 @@ public sealed class DictionaryImportService(
             }
             else
             {
-                await eventHub.BroadcastAsync(new EngineEventMessage("index-complete", record.Id, Percent: 100));
+                await eventHub.BroadcastAsync(new EngineEventMessage("index-complete", entity.Id, Percent: 100));
             }
 
-            dictionaryRepository.MarkIndexed(record.Id, DateTimeOffset.UtcNow.ToString("O"));
+            scopedDictionaries.MarkIndexed(entity.Id, DateTimeOffset.UtcNow.ToString("O"));
         }
         catch (DictionaryFormatException ex)
         {
-            await eventHub.BroadcastAsync(new EngineEventMessage("index-error", record.Id, Error: ex.ErrorCode));
+            await eventHub.BroadcastAsync(new EngineEventMessage("index-error", entity.Id, Error: ex.ErrorCode));
         }
     }
 }

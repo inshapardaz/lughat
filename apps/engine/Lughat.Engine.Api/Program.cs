@@ -9,6 +9,7 @@ using Lughat.Engine.Api.Realtime;
 using Lughat.Engine.Api.Search;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,8 +31,7 @@ if (tokenWasGenerated)
 }
 
 var appDataRoot = AppPaths.GetAppDataRoot();
-var database = new AppDatabase(Path.Combine(appDataRoot, "db", "app.db"));
-database.Migrate();
+Directory.CreateDirectory(Path.Combine(appDataRoot, "db"));
 
 var providerRegistry = new DictionaryProviderRegistry()
     .Register(new StarDictProvider())
@@ -39,16 +39,23 @@ var providerRegistry = new DictionaryProviderRegistry()
     .Register(new MdxProvider());
 
 builder.Services.AddSingleton(providerRegistry);
-builder.Services.AddSingleton(database);
-builder.Services.AddSingleton<DictionaryRepository>();
-builder.Services.AddSingleton<GroupRepository>();
-builder.Services.AddSingleton<HistoryRepository>();
-builder.Services.AddSingleton<FavoriteRepository>();
-builder.Services.AddSingleton<SettingsRepository>();
+
+// EF Core's DbContext isn't thread-safe for concurrent use, so it (and anything that
+// depends on it) is registered scoped, not singleton — one instance per HTTP request.
+// DictionaryImportService's background indexing work creates its own scope explicitly,
+// since it outlives the request that started it — see its doc comment.
+builder.Services.AddDbContext<LughatDbContext>(options =>
+    options.UseSqlite($"Data Source={Path.Combine(appDataRoot, "db", "app.db")}"));
+builder.Services.AddScoped<DictionaryRepository>();
+builder.Services.AddScoped<GroupRepository>();
+builder.Services.AddScoped<HistoryRepository>();
+builder.Services.AddScoped<FavoriteRepository>();
+builder.Services.AddScoped<SettingsRepository>();
+builder.Services.AddScoped<SearchService>();
+builder.Services.AddScoped<DictionaryImportService>();
+
 builder.Services.AddSingleton(new IndexingService(Path.Combine(appDataRoot, "index")));
-builder.Services.AddSingleton<SearchService>();
 builder.Services.AddSingleton<EventHub>();
-builder.Services.AddSingleton<DictionaryImportService>();
 
 // Source-gen only, no reflection fallback — see AppJsonContext's doc comment. This makes a
 // missing-type mistake fail immediately in ordinary `dotnet run`, not just in a trimmed
@@ -59,6 +66,11 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 var app = builder.Build();
+
+using (var migrationScope = app.Services.CreateScope())
+{
+    migrationScope.ServiceProvider.GetRequiredService<LughatDbContext>().Database.Migrate();
+}
 
 app.UseMiddleware<BearerTokenMiddleware>(token!);
 app.UseWebSockets();

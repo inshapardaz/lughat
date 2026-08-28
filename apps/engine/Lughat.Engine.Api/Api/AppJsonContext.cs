@@ -6,23 +6,22 @@ using Lughat.Engine.Api.Search;
 namespace Lughat.Engine.Api.Api;
 
 /// <summary>
-/// Source-generated JSON metadata for every type that crosses an HTTP boundary. Required
-/// for the trimmed self-contained publish (spec §12 / "Sidecar self-contained trimmed
-/// publish" issue): System.Text.Json's reflection-based serializer silently loses type
-/// metadata under trimming, which doesn't just break the type in question — it breaks
-/// Minimal API's endpoint routing table entirely, so even unrelated endpoints 500. Program.cs
-/// sets this as the *only* JsonSerializerOptions.TypeInfoResolver (no reflection fallback),
-/// so a type missing from this list fails immediately in ordinary `dotnet run` too, rather
-/// than only surfacing in a slow trimmed-publish test cycle.
+/// Source-generated JSON metadata for every type that crosses an HTTP boundary. Originally
+/// added because System.Text.Json's reflection-based serializer breaks Minimal API's entire
+/// routing table under IL trimming (see apps/engine/publish.sh — trimming is off now, for
+/// unrelated Dapper/EF reasons, but this is still the right approach regardless: Program.cs
+/// sets it as the *only* JsonSerializerOptions.TypeInfoResolver, no reflection fallback, so
+/// a type missing from this list fails immediately in ordinary `dotnet run` rather than only
+/// surfacing later.
 /// </summary>
-[JsonSerializable(typeof(DictionaryRecord))]
-[JsonSerializable(typeof(IReadOnlyList<DictionaryRecord>))]
-[JsonSerializable(typeof(GroupRecord))]
-[JsonSerializable(typeof(IReadOnlyList<GroupRecord>))]
-[JsonSerializable(typeof(HistoryRecord))]
-[JsonSerializable(typeof(IReadOnlyList<HistoryRecord>))]
-[JsonSerializable(typeof(FavoriteRecord))]
-[JsonSerializable(typeof(IReadOnlyList<FavoriteRecord>))]
+[JsonSerializable(typeof(DictionaryEntity))]
+[JsonSerializable(typeof(IReadOnlyList<DictionaryEntity>))]
+[JsonSerializable(typeof(GroupEntity))]
+[JsonSerializable(typeof(IReadOnlyList<GroupEntity>))]
+[JsonSerializable(typeof(HistoryEntity))]
+[JsonSerializable(typeof(IReadOnlyList<HistoryEntity>))]
+[JsonSerializable(typeof(FavoriteEntity))]
+[JsonSerializable(typeof(IReadOnlyList<FavoriteEntity>))]
 [JsonSerializable(typeof(SearchHit))]
 [JsonSerializable(typeof(IReadOnlyList<SearchHit>))]
 [JsonSerializable(typeof(DictionaryEndpoints.ImportRequest))]

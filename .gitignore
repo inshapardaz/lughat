@@ -14,6 +14,7 @@ bin/
 obj/
 *.user
 apps/engine/publish/
+apps/engine/**/design-time.db
 
 # Editors / OS
 .vscode/
