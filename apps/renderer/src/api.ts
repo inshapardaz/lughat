@@ -128,4 +128,17 @@ export const api = {
 
   mediaUrl: (engine: EngineInfo, dictionaryId: string, relativePath: string) =>
     `${engine.baseUrl}/api/media/${dictionaryId}/${relativePath}`,
+
+  exportAnki: async (engine: EngineInfo, deckName: string, cards: { front: string; back: string }[]): Promise<Blob> => {
+    const response = await fetch(`${engine.baseUrl}/api/anki-export`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${engine.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deckName, cards }),
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new EngineApiError(body?.error ?? 'unknown', body?.detail ?? 'Anki export failed.');
+    }
+    return response.blob();
+  },
 };

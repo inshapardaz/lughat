@@ -81,6 +81,7 @@ app.MapDictionaryEndpoints();
 app.MapLookupEndpoints();
 app.MapMediaEndpoints();
 app.MapSettingsEndpoints();
+app.MapAnkiEndpoints();
 
 app.MapGet("/api/ping", () => Results.Ok(new PingResponse("ok", "Lughat.Engine.Api")));
 
