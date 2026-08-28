@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xdxf lang_from="ENG" lang_to="ENG" format="visual">
+  <full_name>Lughat XDXF Fixture</full_name>
+  <ar>
+    <k>apple</k>
+    <def><b>apple</b> — a round fruit that grows on trees.</def>
+  </ar>
+  <ar>
+    <k>book</k>
+    <def>a set of printed pages bound together.</def>
+  </ar>
+  <ar>
+    <k>couch</k>
+    <k>sofa</k>
+    <def>a piece of furniture for sitting.</def>
+  </ar>
+</xdxf>
