@@ -4,11 +4,16 @@ dist/
 dist-electron/
 *.tsbuildinfo
 npm-debug.log*
+apps/shell/renderer-dist/
+apps/shell/release/
+apps/e2e/test-results/
+apps/e2e/playwright-report/
 
 # .NET
 bin/
 obj/
 *.user
+apps/engine/publish/
 
 # Editors / OS
 .vscode/

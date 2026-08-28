@@ -29,5 +29,11 @@ jobs:
       - name: Build renderer
         run: npm run build --workspace @lughat/renderer
 
+      - name: Test renderer
+        run: npm test --workspace @lughat/renderer
+
       - name: Build engine
         run: dotnet build apps/engine/Lughat.Engine.sln
+
+      - name: Test engine
+        run: dotnet test apps/engine/Lughat.Engine.sln

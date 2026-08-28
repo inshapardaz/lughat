@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lughat.Engine.Api", "Lughat.Engine.Api\Lughat.Engine.Api.csproj", "{2707295F-833A-4B1F-B17D-497E1A0912D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lughat.Engine.Tests", "Lughat.Engine.Tests\Lughat.Engine.Tests.csproj", "{B2088B01-8008-42BA-80A6-16EFE5216437}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{2707295F-833A-4B1F-B17D-497E1A0912D8}.Release|x64.Build.0 = Release|Any CPU
 		{2707295F-833A-4B1F-B17D-497E1A0912D8}.Release|x86.ActiveCfg = Release|Any CPU
 		{2707295F-833A-4B1F-B17D-497E1A0912D8}.Release|x86.Build.0 = Release|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Debug|x64.Build.0 = Debug|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Debug|x86.Build.0 = Debug|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Release|x64.ActiveCfg = Release|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Release|x64.Build.0 = Release|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Release|x86.ActiveCfg = Release|Any CPU
+		{B2088B01-8008-42BA-80A6-16EFE5216437}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

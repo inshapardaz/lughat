@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import type { EngineInfo } from './global';
+import type { EngineInfo, EngineStatus } from './global';
 
 export function useEngineInfo() {
   const [engineInfo, setEngineInfo] = useState<EngineInfo | null>(null);
+  const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -19,9 +20,19 @@ export function useEngineInfo() {
           return;
         }
         setEngineInfo(info);
+        setConnected(true);
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to reach the engine.'));
+
+    const unsubscribe = window.lughat.onEngineStatus((status: EngineStatus) => {
+      setConnected(status.connected);
+      if (status.info) {
+        setEngineInfo(status.info);
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
-  return { engineInfo, error };
+  return { engineInfo, connected, error };
 }

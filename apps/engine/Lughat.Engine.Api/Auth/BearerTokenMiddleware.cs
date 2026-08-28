@@ -1,3 +1,5 @@
+using Lughat.Engine.Api.Api;
+
 namespace Lughat.Engine.Api.Auth;
 
 /// <summary>
@@ -21,7 +23,9 @@ public sealed class BearerTokenMiddleware
         if (header != $"Bearer {_expectedToken}")
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new { error = "unauthorized" });
+            await context.Response.WriteAsJsonAsync(
+                new ErrorResponse("unauthorized", "Missing or invalid bearer token."),
+                AppJsonContext.Default.ErrorResponse);
             return;
         }
 

@@ -1,0 +1,49 @@
+{
+  "app": { "title": "Lughat" },
+  "search": {
+    "placeholder": "Search a word…",
+    "noResults": "No matches yet.",
+    "connecting": "Connecting to the dictionary engine…",
+    "reconnecting": "Reconnecting to the dictionary engine…",
+    "connectionFailed": "Couldn't reach the dictionary engine."
+  },
+  "nav": {
+    "search": "Search",
+    "dictionaries": "Dictionaries",
+    "history": "History",
+    "favorites": "Favorites",
+    "settings": "Settings"
+  },
+  "dictionaries": {
+    "title": "Dictionaries",
+    "import": "Import dictionary",
+    "empty": "No dictionaries yet — import one to get started.",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "remove": "Remove",
+    "indexing": "Indexing…",
+    "ready": "Ready"
+  },
+  "history": {
+    "title": "History",
+    "empty": "Nothing looked up yet."
+  },
+  "favorites": {
+    "title": "Favorites",
+    "empty": "No favorites yet.",
+    "add": "Add to favorites",
+    "remove": "Remove favorite"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeAuto": "Match system",
+    "language": "Language"
+  },
+  "tabs": {
+    "newSearch": "New search"
+  }
+}

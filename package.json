@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "apps/shell",
-    "apps/renderer"
+    "apps/renderer",
+    "apps/e2e"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
@@ -14,5 +15,9 @@
     "concurrently": "^10.0.5",
     "cross-env": "^10.1.0",
     "wait-on": "^9.1.0"
+  },
+  "overrides": {
+    "jsdom": "24.1.3",
+    "@noble/hashes": "1.8.0"
   }
 }

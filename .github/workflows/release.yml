@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            engine-rids: "win-x64"
+            electron-flag: "--win"
+          - os: macos-latest
+            engine-rids: "osx-x64 osx-arm64"
+            electron-flag: "--mac"
+          - os: ubuntu-latest
+            engine-rids: "linux-x64"
+            electron-flag: "--linux"
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install JS dependencies
+        run: npm install
+
+      - name: Publish engine (self-contained, single-file — not trimmed, see apps/engine/publish.sh)
+        shell: bash
+        run: |
+          for rid in ${{ matrix.engine-rids }}; do
+            dotnet publish apps/engine/Lughat.Engine.Api/Lughat.Engine.Api.csproj \
+              -c Release -r "$rid" --self-contained \
+              -p:PublishSingleFile=true \
+              -o "apps/engine/publish/$rid"
+          done
+
+      - name: Build renderer
+        run: npm run build --workspace @lughat/renderer
+
+      - name: Build shell
+        run: npm run build --workspace @lughat/shell
+
+      - name: Package Electron app
+        working-directory: apps/shell
+        run: |
+          npm run copy-renderer
+          npx electron-builder ${{ matrix.electron-flag }} --publish never
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: lughat-${{ matrix.os }}
+          path: |
+            apps/shell/release/*.exe
+            apps/shell/release/*.msi
+            apps/shell/release/*.dmg
+            apps/shell/release/*.zip
+            apps/shell/release/*.AppImage
+            apps/shell/release/*.deb
+            apps/shell/release/*.rpm
+          if-no-files-found: warn

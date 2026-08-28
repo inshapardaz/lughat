@@ -1,0 +1,49 @@
+{
+  "app": { "title": "لُغت" },
+  "search": {
+    "placeholder": "لفظ تلاش کریں…",
+    "noResults": "ابھی تک کوئی نتیجہ نہیں۔",
+    "connecting": "لغت انجن سے رابطہ ہو رہا ہے…",
+    "reconnecting": "لغت انجن سے دوبارہ رابطہ ہو رہا ہے…",
+    "connectionFailed": "لغت انجن سے رابطہ نہیں ہو سکا۔"
+  },
+  "nav": {
+    "search": "تلاش",
+    "dictionaries": "لغات",
+    "history": "تاریخچہ",
+    "favorites": "پسندیدہ",
+    "settings": "ترتیبات"
+  },
+  "dictionaries": {
+    "title": "لغات",
+    "import": "لغت درآمد کریں",
+    "empty": "ابھی کوئی لغت نہیں — شروع کرنے کے لیے ایک درآمد کریں۔",
+    "enabled": "فعال",
+    "disabled": "غیر فعال",
+    "remove": "ہٹائیں",
+    "indexing": "اشاریہ بن رہا ہے…",
+    "ready": "تیار"
+  },
+  "history": {
+    "title": "تاریخچہ",
+    "empty": "ابھی تک کچھ تلاش نہیں کیا گیا۔"
+  },
+  "favorites": {
+    "title": "پسندیدہ",
+    "empty": "ابھی تک کوئی پسندیدہ نہیں۔",
+    "add": "پسندیدہ میں شامل کریں",
+    "remove": "پسندیدہ سے ہٹائیں"
+  },
+  "settings": {
+    "title": "ترتیبات",
+    "appearance": "ظاہری شکل",
+    "theme": "تھیم",
+    "themeLight": "روشن",
+    "themeDark": "تاریک",
+    "themeAuto": "سسٹم کے مطابق",
+    "language": "زبان"
+  },
+  "tabs": {
+    "newSearch": "نئی تلاش"
+  }
+}
