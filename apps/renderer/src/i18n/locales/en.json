@@ -3,9 +3,14 @@
   "search": {
     "placeholder": "Search a word…",
     "noResults": "No matches yet.",
+    "didYouMean": "Did you mean:",
     "connecting": "Connecting to the dictionary engine…",
     "reconnecting": "Reconnecting to the dictionary engine…",
-    "connectionFailed": "Couldn't reach the dictionary engine."
+    "connectionFailed": "Couldn't reach the dictionary engine.",
+    "virtualKeyboard": "Show virtual keyboard"
+  },
+  "article": {
+    "pronounce": "Pronounce"
   },
   "nav": {
     "search": "Search",
@@ -44,6 +49,12 @@
     "language": "Language"
   },
   "tabs": {
-    "newSearch": "New search"
+    "newSearch": "New search",
+    "close": "Close tab",
+    "back": "Back",
+    "forward": "Forward"
+  },
+  "anki": {
+    "export": "Export to Anki"
   }
 }

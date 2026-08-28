@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Autocomplete } from '@mantine/core';
+import { Autocomplete, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 import { useAppStore } from '../store';
+import { VirtualKeyboard } from './VirtualKeyboard';
 
 export function SearchBar() {
   const { t } = useTranslation();
@@ -48,19 +49,22 @@ export function SearchBar() {
   }
 
   return (
-    <Autocomplete
-      value={value}
-      onChange={setValue}
-      data={suggestions}
-      placeholder={t('search.placeholder')}
-      onOptionSubmit={submit}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          submit(value);
-        }
-      }}
-      w={360}
-      dir="auto"
-    />
+    <Group gap={4} wrap="nowrap">
+      <Autocomplete
+        value={value}
+        onChange={setValue}
+        data={suggestions}
+        placeholder={t('search.placeholder')}
+        onOptionSubmit={submit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            submit(value);
+          }
+        }}
+        w={360}
+        dir="auto"
+      />
+      <VirtualKeyboard onInsert={(character) => setValue((current) => current + character)} />
+    </Group>
   );
 }
