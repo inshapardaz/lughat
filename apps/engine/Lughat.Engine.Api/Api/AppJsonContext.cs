@@ -33,5 +33,7 @@ namespace Lughat.Engine.Api.Api;
 [JsonSerializable(typeof(ErrorResponse))]
 [JsonSerializable(typeof(PingResponse))]
 [JsonSerializable(typeof(EngineEventMessage))]
+[JsonSerializable(typeof(AnkiEndpoints.AnkiExportRequest))]
+[JsonSerializable(typeof(AnkiEndpoints.AnkiExportCardRequest))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class AppJsonContext : JsonSerializerContext;

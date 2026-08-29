@@ -11,10 +11,20 @@ import {
 import type { EngineInfo } from './global';
 import i18n from './i18n';
 
-export interface Tab {
-  id: string;
+export interface TabEntry {
   term: string;
   hits: SearchHit[];
+  /** "Did you mean" candidates — populated when a lookup finds no exact match. */
+  suggestions?: string[];
+}
+
+export interface Tab {
+  id: string;
+  /** Visited terms in this tab, in order — the back/forward stack (spec §6's "Cross-linked
+   *  article navigation with back/forward history"). The tab's own id stays stable across
+   *  navigation; only which entry is active changes. */
+  entries: TabEntry[];
+  activeIndex: number;
 }
 
 export type View = 'search' | 'dictionaries' | 'history' | 'favorites' | 'settings';
@@ -46,6 +56,9 @@ interface AppState {
 
   runSearch: (query: string, mode: SearchMode) => Promise<void>;
   openLookupTab: (term: string) => Promise<void>;
+  navigateInTab: (tabId: string, term: string) => Promise<void>;
+  goBack: (tabId: string) => void;
+  goForward: (tabId: string) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
 
@@ -58,6 +71,20 @@ interface AppState {
   setLanguage: (language: string) => Promise<void>;
   loadPersistedSettings: () => Promise<void>;
   connectEvents: () => void;
+}
+
+async function lookupWithSuggestions(engine: EngineInfo, term: string): Promise<TabEntry> {
+  const hits = await api.lookup(engine, term);
+  if (hits.length > 0) {
+    return { term, hits };
+  }
+
+  // No exact match — offer fuzzy candidates as "did you mean" suggestions, per #49.
+  const fuzzyHits = await api.search(engine, term, 'fuzzy');
+  const suggestions = [...new Set(fuzzyHits.map((h) => h.headword))].filter(
+    (s) => s.toLowerCase() !== term.toLowerCase(),
+  );
+  return { term, hits: [], suggestions: suggestions.length > 0 ? suggestions : undefined };
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -118,7 +145,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const hits = await api.search(engine, query, mode);
     const id = `search:${query}`;
     set((state) => ({
-      tabs: upsertTab(state.tabs, { id, term: query, hits }),
+      tabs: upsertTab(state.tabs, { id, entries: [{ term: query, hits }], activeIndex: 0 }),
       activeTabId: id,
     }));
   },
@@ -126,13 +153,48 @@ export const useAppStore = create<AppState>((set, get) => ({
   openLookupTab: async (term) => {
     const engine = get().engineInfo;
     if (!engine || term.trim().length === 0) return;
-    const hits = await api.lookup(engine, term);
+    const entry = await lookupWithSuggestions(engine, term);
     const id = `lookup:${term}`;
     set((state) => ({
-      tabs: upsertTab(state.tabs, { id, term, hits }),
+      tabs: upsertTab(state.tabs, { id, entries: [entry], activeIndex: 0 }),
       activeTabId: id,
     }));
     await get().loadHistory();
+  },
+
+  navigateInTab: async (tabId, term) => {
+    const engine = get().engineInfo;
+    if (!engine || term.trim().length === 0) return;
+    const entry = await lookupWithSuggestions(engine, term);
+
+    set((state) => ({
+      tabs: state.tabs.map((tab) => {
+        if (tab.id !== tabId) return tab;
+        // Standard back/forward semantics: navigating from a point you'd gone back to
+        // discards whatever forward history existed past it.
+        const entries = [...tab.entries.slice(0, tab.activeIndex + 1), entry];
+        return { ...tab, entries, activeIndex: entries.length - 1 };
+      }),
+    }));
+    await get().loadHistory();
+  },
+
+  goBack: (tabId) => {
+    set((state) => ({
+      tabs: state.tabs.map((tab) =>
+        tab.id === tabId && tab.activeIndex > 0 ? { ...tab, activeIndex: tab.activeIndex - 1 } : tab,
+      ),
+    }));
+  },
+
+  goForward: (tabId) => {
+    set((state) => ({
+      tabs: state.tabs.map((tab) =>
+        tab.id === tabId && tab.activeIndex < tab.entries.length - 1
+          ? { ...tab, activeIndex: tab.activeIndex + 1 }
+          : tab,
+      ),
+    }));
   },
 
   closeTab: (id) => {

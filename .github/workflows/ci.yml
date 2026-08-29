@@ -26,6 +26,9 @@ jobs:
       - name: Typecheck shell
         run: npm run typecheck --workspace @lughat/shell
 
+      - name: Test shell
+        run: npm test --workspace @lughat/shell
+
       - name: Build renderer
         run: npm run build --workspace @lughat/renderer
 

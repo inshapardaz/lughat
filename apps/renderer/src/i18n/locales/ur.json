@@ -3,9 +3,14 @@
   "search": {
     "placeholder": "لفظ تلاش کریں…",
     "noResults": "ابھی تک کوئی نتیجہ نہیں۔",
+    "didYouMean": "کیا آپ کا مطلب یہ تھا:",
     "connecting": "لغت انجن سے رابطہ ہو رہا ہے…",
     "reconnecting": "لغت انجن سے دوبارہ رابطہ ہو رہا ہے…",
-    "connectionFailed": "لغت انجن سے رابطہ نہیں ہو سکا۔"
+    "connectionFailed": "لغت انجن سے رابطہ نہیں ہو سکا۔",
+    "virtualKeyboard": "ورچوئل کی بورڈ دکھائیں"
+  },
+  "article": {
+    "pronounce": "تلفظ سنیں"
   },
   "nav": {
     "search": "تلاش",
@@ -44,6 +49,12 @@
     "language": "زبان"
   },
   "tabs": {
-    "newSearch": "نئی تلاش"
+    "newSearch": "نئی تلاش",
+    "close": "ٹیب بند کریں",
+    "back": "پیچھے",
+    "forward": "آگے"
+  },
+  "anki": {
+    "export": "Anki میں برآمد کریں"
   }
 }

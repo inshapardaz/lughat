@@ -55,6 +55,19 @@ jobs:
 
       - name: Package Electron app
         working-directory: apps/shell
+        # CSC_LINK/CSC_KEY_PASSWORD (Windows + macOS code signing) and the APPLE_* trio
+        # (macOS notarization) are electron-builder's own conventional env var names — it
+        # signs/notarizes automatically when they're present and skips gracefully (just a
+        # log warning, not a failure) when they're not. No certs exist yet (spec §12's
+        # phased plan), so today this always takes the "skip" path; adding the matching
+        # secrets to the repo is the only step needed to turn signing on, no workflow or
+        # config change required at that point.
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           npm run copy-renderer
           npx electron-builder ${{ matrix.electron-flag }} --publish never

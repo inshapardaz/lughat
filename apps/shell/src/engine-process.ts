@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import readline from 'node:readline';
 import { app } from 'electron';
+import { getPortableDataDir } from './portable';
 
 export interface EngineInfo {
   baseUrl: string;
@@ -22,9 +23,18 @@ export function spawnEngine(): Promise<{ process: ChildProcessWithoutNullStreams
     const token = randomBytes(16).toString('hex');
     const { command, args } = resolveEngineCommand();
 
-    const child = spawn(command, args, {
-      env: { ...process.env, LUGHAT_ENGINE_TOKEN: token },
-    });
+    // Portable mode (spec §6): if a "portable.txt" marker sits next to the app's own
+    // executable, the engine's data — SQLite db, search index — goes into a "data" folder
+    // right alongside it instead of the OS per-user profile directory. LUGHAT_DATA_DIR
+    // already existed as a dev/test override (see AppPaths.cs); this reuses it rather than
+    // adding a second mechanism.
+    const portableDataDir = getPortableDataDir();
+    const env: NodeJS.ProcessEnv = { ...process.env, LUGHAT_ENGINE_TOKEN: token };
+    if (portableDataDir) {
+      env.LUGHAT_DATA_DIR = portableDataDir;
+    }
+
+    const child = spawn(command, args, { env });
 
     const timeout = setTimeout(() => {
       child.kill();

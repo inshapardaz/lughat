@@ -36,7 +36,9 @@ Directory.CreateDirectory(Path.Combine(appDataRoot, "db"));
 var providerRegistry = new DictionaryProviderRegistry()
     .Register(new StarDictProvider())
     .Register(new WordListProvider())
-    .Register(new MdxProvider());
+    .Register(new MdxProvider())
+    .Register(new DslProvider())
+    .Register(new XdxfProvider());
 
 builder.Services.AddSingleton(providerRegistry);
 
@@ -79,6 +81,7 @@ app.MapDictionaryEndpoints();
 app.MapLookupEndpoints();
 app.MapMediaEndpoints();
 app.MapSettingsEndpoints();
+app.MapAnkiEndpoints();
 
 app.MapGet("/api/ping", () => Results.Ok(new PingResponse("ok", "Lughat.Engine.Api")));
 
