@@ -61,6 +61,17 @@ builder.Services.AddScoped<DictionaryImportService>();
 builder.Services.AddSingleton(new IndexingService(Path.Combine(appDataRoot, "index")));
 builder.Services.AddSingleton<EventHub>();
 
+// The renderer calls this API cross-origin — the Vite dev server (http://localhost:5173) and
+// a packaged Electron window (file://, which browsers send as Origin: null) are both a
+// different origin than the engine's own loopback port. Every one of those fetches also
+// carries an Authorization header, which is enough on its own to force a CORS preflight
+// (OPTIONS) even for a plain GET. Access is already gated by the per-launch bearer token
+// (see BearerTokenMiddleware) and this only ever binds to loopback, so there's no origin
+// allowlist worth maintaining here — AllowAnyOrigin is the actual security boundary-neutral
+// choice, not a shortcut past one.
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
 // Source-gen only, no reflection fallback — see AppJsonContext's doc comment. This makes a
 // missing-type mistake fail immediately in ordinary `dotnet run`, not just in a trimmed
 // publish.
@@ -99,6 +110,12 @@ using (var bootstrapScope = app.Services.CreateScope())
     }
 }
 
+// Must run before the bearer token check: a CORS preflight (OPTIONS) request never carries
+// the Authorization header by spec, so if this ran after the auth middleware every preflight
+// would get a 401 and the browser would report it as a CORS failure on the real request —
+// exactly the bug this fixes. UseCors() answers preflight requests itself and never forwards
+// them further down the pipeline, so BearerTokenMiddleware only ever sees the real request.
+app.UseCors();
 app.UseMiddleware<BearerTokenMiddleware>(token!);
 app.UseWebSockets();
 
