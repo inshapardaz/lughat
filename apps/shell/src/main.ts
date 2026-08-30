@@ -141,8 +141,11 @@ ipcMain.handle('dictionary:pick-file', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     title: 'Import dictionary',
     properties: ['openFile'],
+    // Kept in sync with the providers DictionaryProviderRegistry registers in Program.cs.
+    // WordNet has no extension of its own — point this dialog at its dict directory's
+    // "index.sense" file, which only shows up under "All files".
     filters: [
-      { name: 'Dictionary files', extensions: ['ifo', 'mdx', 'csv', 'tsv', 'txt'] },
+      { name: 'Dictionary files', extensions: ['ifo', 'mdx', 'csv', 'tsv', 'txt', 'dsl', 'xdxf', 'jsonl'] },
       { name: 'All files', extensions: ['*'] },
     ],
   });
