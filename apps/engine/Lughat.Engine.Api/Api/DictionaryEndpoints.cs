@@ -14,7 +14,7 @@ public static class DictionaryEndpoints
         {
             try
             {
-                return Results.Ok(importService.Import(request.Path));
+                return Results.Ok(importService.Import(request.Path, request.Language ?? "en"));
             }
             catch (DictionaryFormatException ex)
             {
@@ -45,7 +45,9 @@ public static class DictionaryEndpoints
             Results.Ok(groups.Create(request.Name)));
     }
 
-    public sealed record ImportRequest(string Path);
+    // Language drives which per-language IStemmer (see StemmerRegistry, issue #60) indexes
+    // this dictionary's search fields — defaults to "en" when the caller doesn't know or care.
+    public sealed record ImportRequest(string Path, string? Language = null);
 
     public sealed record OrderRequest(string? GroupId, int SortOrder);
 

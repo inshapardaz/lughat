@@ -2,6 +2,7 @@
 using Lughat.Engine.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lughat.Engine.Api.Data.Migrations
 {
     [DbContext(typeof(LughatDbContext))]
-    partial class LughatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260830055311_AddDictionaryLanguage")]
+    partial class AddDictionaryLanguage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");

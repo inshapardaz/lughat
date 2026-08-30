@@ -38,7 +38,9 @@ var providerRegistry = new DictionaryProviderRegistry()
     .Register(new WordListProvider())
     .Register(new MdxProvider())
     .Register(new DslProvider())
-    .Register(new XdxfProvider());
+    .Register(new XdxfProvider())
+    .Register(new WordNetProvider())
+    .Register(new KaikkiProvider());
 
 builder.Services.AddSingleton(providerRegistry);
 
@@ -72,6 +74,29 @@ var app = builder.Build();
 using (var migrationScope = app.Services.CreateScope())
 {
     migrationScope.ServiceProvider.GetRequiredService<LughatDbContext>().Database.Migrate();
+}
+
+// Fresh install → no dictionaries yet → import the bundled starter dictionary (issue #59) so
+// the app is immediately useful rather than opening to an empty shelf. Best-effort: a missing
+// or malformed bundled file shouldn't stop the app from starting.
+using (var bootstrapScope = app.Services.CreateScope())
+{
+    var dictionaries = bootstrapScope.ServiceProvider.GetRequiredService<DictionaryRepository>();
+    if (dictionaries.List().Count == 0)
+    {
+        var starterPath = Path.Combine(AppContext.BaseDirectory, "StarterDictionary", "starter-en.jsonl");
+        if (File.Exists(starterPath))
+        {
+            try
+            {
+                bootstrapScope.ServiceProvider.GetRequiredService<DictionaryImportService>().Import(starterPath, "en");
+            }
+            catch (DictionaryFormatException)
+            {
+                // Starter dictionary is a nice-to-have, not load-bearing — swallow and move on.
+            }
+        }
+    }
 }
 
 app.UseMiddleware<BearerTokenMiddleware>(token!);

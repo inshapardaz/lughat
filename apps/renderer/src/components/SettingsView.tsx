@@ -1,6 +1,6 @@
 import { SegmentedControl, Select, Stack, Text, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { SUPPORTED_LANGUAGES } from '../i18n';
+import { labelFor, SUPPORTED_LANGUAGES } from '../i18n';
 import { useAppStore } from '../store';
 
 export function SettingsView() {
@@ -39,7 +39,7 @@ export function SettingsView() {
         label={t('settings.language')}
         value={language}
         onChange={(value) => value && void setLanguage(value)}
-        data={SUPPORTED_LANGUAGES.map((lang) => ({ value: lang, label: lang === 'ur' ? 'اردو' : 'English' }))}
+        data={SUPPORTED_LANGUAGES.map((lang) => ({ value: lang, label: labelFor(lang) }))}
         allowDeselect={false}
       />
     </Stack>

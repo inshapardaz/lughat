@@ -73,6 +73,20 @@ public class IndexingAndSearchTests : IDisposable
     }
 
     [Fact]
+    public void Fulltext_search_matches_across_stemmed_inflected_forms()
+    {
+        var record = _dictionaries.Insert("Test Dict", "wordlist", "test.tsv", "hash-stem", "en");
+        _indexing.BuildIndex(record.Id, record.ContentHash,
+            [new DictionaryEntry("run", "To move fast on foot.")],
+            language: "en");
+        _dictionaries.MarkIndexed(record.Id, DateTimeOffset.UtcNow.ToString("O"));
+
+        var results = _search.Search(null, "running", "fulltext");
+
+        Assert.Contains(results, h => h.Headword == "run");
+    }
+
+    [Fact]
     public void IsIndexed_is_false_before_building_and_true_after()
     {
         Assert.False(_indexing.IsIndexed("hash3"));
