@@ -1,0 +1,60 @@
+{
+  "app": { "title": "لغات" },
+  "search": {
+    "placeholder": "ابحث عن كلمة…",
+    "noResults": "لا توجد نتائج بعد.",
+    "didYouMean": "هل تقصد:",
+    "connecting": "جارٍ الاتصال بمحرك القاموس…",
+    "reconnecting": "جارٍ إعادة الاتصال بمحرك القاموس…",
+    "connectionFailed": "تعذّر الوصول إلى محرك القاموس.",
+    "virtualKeyboard": "إظهار لوحة المفاتيح الافتراضية"
+  },
+  "article": {
+    "pronounce": "نطق"
+  },
+  "nav": {
+    "search": "بحث",
+    "dictionaries": "القواميس",
+    "history": "السجل",
+    "favorites": "المفضلة",
+    "settings": "الإعدادات"
+  },
+  "dictionaries": {
+    "title": "القواميس",
+    "import": "استيراد قاموس",
+    "empty": "لا توجد قواميس بعد — استورد واحدًا للبدء.",
+    "enabled": "مُفعّل",
+    "disabled": "معطّل",
+    "remove": "إزالة",
+    "indexing": "جارٍ الفهرسة…",
+    "ready": "جاهز"
+  },
+  "history": {
+    "title": "السجل",
+    "empty": "لم يتم البحث عن شيء بعد."
+  },
+  "favorites": {
+    "title": "المفضلة",
+    "empty": "لا توجد مفضلات بعد.",
+    "add": "إضافة إلى المفضلة",
+    "remove": "إزالة من المفضلة"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "appearance": "المظهر",
+    "theme": "السمة",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "themeAuto": "مطابقة النظام",
+    "language": "اللغة"
+  },
+  "tabs": {
+    "newSearch": "بحث جديد",
+    "close": "إغلاق التبويب",
+    "back": "رجوع",
+    "forward": "تقدّم"
+  },
+  "anki": {
+    "export": "تصدير إلى Anki"
+  }
+}

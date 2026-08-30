@@ -10,7 +10,7 @@ public sealed class DictionaryRepository(LughatDbContext db)
     public DictionaryEntity? Find(string id) =>
         db.Dictionaries.AsNoTracking().FirstOrDefault(d => d.Id == id);
 
-    public DictionaryEntity Insert(string name, string format, string filePath, string contentHash)
+    public DictionaryEntity Insert(string name, string format, string filePath, string contentHash, string language = "en")
     {
         var nextSortOrder = (db.Dictionaries.Select(d => (int?)d.SortOrder).Max() ?? -1) + 1;
 
@@ -25,6 +25,7 @@ public sealed class DictionaryRepository(LughatDbContext db)
             GroupId = null,
             SortOrder = nextSortOrder,
             IndexedAt = null,
+            Language = language,
         };
 
         db.Dictionaries.Add(entity);

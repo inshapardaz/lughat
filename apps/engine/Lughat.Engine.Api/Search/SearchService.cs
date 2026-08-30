@@ -85,13 +85,48 @@ public sealed class SearchService(IndexingService indexingService, DictionaryRep
     private static Query ParseFullTextQuery(string normalized)
     {
         var parser = new QueryParser(Version, "article", new StandardAnalyzer(Version));
+        Query baseQuery;
         try
         {
-            return parser.Parse(QueryParserBase.Escape(normalized));
+            baseQuery = parser.Parse(QueryParserBase.Escape(normalized));
         }
         catch (ParseException)
         {
-            return new TermQuery(new Term("article", normalized.ToLowerInvariant()));
+            baseQuery = new TermQuery(new Term("article", normalized.ToLowerInvariant()));
         }
+
+        // OR in every registered language's stemmed reading of the query (issue #60) — e.g.
+        // "running" also matches articles indexed under the stem "run" — without touching this
+        // method's signature when a new IStemmer is registered; StemmerRegistry.Default.All
+        // just grows.
+        var stemmedQuery = BuildStemmedQuery(normalized);
+        if (stemmedQuery is null)
+        {
+            return baseQuery;
+        }
+
+        return new BooleanQuery { { baseQuery, Occur.SHOULD }, { stemmedQuery, Occur.SHOULD } };
+    }
+
+    private static Query? BuildStemmedQuery(string normalized)
+    {
+        var terms = normalized.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (terms.Length == 0)
+        {
+            return null;
+        }
+
+        var query = new BooleanQuery();
+        foreach (var term in terms)
+        {
+            foreach (var stemmer in StemmerRegistry.Default.All)
+            {
+                var stemmed = stemmer.Stem(term);
+                query.Add(new TermQuery(new Term("articleStemmed", stemmed)), Occur.SHOULD);
+                query.Add(new TermQuery(new Term("headwordStemmed", stemmed)), Occur.SHOULD);
+            }
+        }
+
+        return query;
     }
 }

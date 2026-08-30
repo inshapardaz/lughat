@@ -17,7 +17,7 @@ public sealed class DictionaryImportService(
     EventHub eventHub,
     IServiceScopeFactory scopeFactory)
 {
-    public DictionaryEntity Import(string filePath)
+    public DictionaryEntity Import(string filePath, string language = "en")
     {
         if (!File.Exists(filePath))
         {
@@ -31,7 +31,7 @@ public sealed class DictionaryImportService(
         var name = Path.GetFileNameWithoutExtension(filePath);
         // Uses the request-scoped repository directly — this part runs synchronously within
         // the HTTP request that's importing the dictionary.
-        var entity = dictionaryRepository.Insert(name, provider.FormatId, filePath, contentHash);
+        var entity = dictionaryRepository.Insert(name, provider.FormatId, filePath, contentHash, language);
 
         _ = IndexInBackgroundAsync(entity, provider, contentHash);
         return entity;
@@ -53,6 +53,7 @@ public sealed class DictionaryImportService(
                     entity.Id,
                     contentHash,
                     provider.ReadEntries(entity.FilePath),
+                    entity.Language,
                     onProgress: e => _ = eventHub.BroadcastAsync(new EngineEventMessage(
                         Type: e.Complete ? "index-complete" : "index-progress",
                         DictId: e.DictionaryId,

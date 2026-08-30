@@ -1,0 +1,3 @@
+00000001 03 n 01 animal 0 000 | a living organism that feeds on organic matter.
+00000002 03 n 02 dog 0 canine 0 001 @ 00000001 n 0000 | a domesticated carnivorous mammal.
+00000003 03 n 02 cat 0 feline 0 001 @ 00000001 n 0000 | a small domesticated carnivorous mammal.

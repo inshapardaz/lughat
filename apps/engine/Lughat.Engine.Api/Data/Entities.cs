@@ -16,6 +16,11 @@ public sealed class DictionaryEntity
     public string? GroupId { get; set; }
     public int SortOrder { get; set; }
     public string? IndexedAt { get; set; }
+
+    // ISO 639-1 code driving which IStemmer BuildIndex() uses (see StemmerRegistry) — defaults
+    // to "en" rather than null so search stemming (spec §6/§8, issue #60) works out of the box
+    // for the common case without requiring every import to explicitly tag a language.
+    public string Language { get; set; } = "en";
 }
 
 public sealed class GroupEntity
