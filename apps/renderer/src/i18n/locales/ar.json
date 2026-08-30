@@ -56,5 +56,22 @@
   },
   "anki": {
     "export": "تصدير إلى Anki"
+  },
+  "errors": {
+    "generic": "حدث خطأ ما.",
+    "dictionary.not_found": "هذا القاموس لم يعد موجودًا.",
+    "favorite.not_found": "هذا العنصر المفضّل لم يعد موجودًا.",
+    "dictionary.import.unsupported_format": "هذا الملف ليس بصيغة قاموس معروفة.",
+    "dictionary.import.source_missing": "تعذّر العثور على هذا الملف.",
+    "dictionary.import.missing_file": "أحد ملفات هذا القاموس مفقود.",
+    "dictionary.import.corrupt_header": "ملف القاموس هذا تالف أو غير صالح.",
+    "dictionary.import.corrupt_index": "فهرس هذا القاموس تالف.",
+    "dictionary.import.corrupt_block": "أحد أجزاء ملف القاموس هذا تالف.",
+    "dictionary.import.malformed_row": "يحتوي ملف القاموس هذا على إدخال غير صالح.",
+    "dictionary.import.unsupported_version": "إصدار صيغة ملف القاموس هذا غير مدعوم.",
+    "dictionary.import.unsupported_compression": "ضغط ملف القاموس هذا غير مدعوم.",
+    "dictionary.import.encrypted_unsupported": "ملف القاموس هذا مشفّر، وهو أمر غير مدعوم.",
+    "dictionary.import.lzo_unsupported": "يستخدم ملف القاموس هذا ضغط LZO، وهو غير مدعوم.",
+    "media.not_found": "تعذّر العثور على ملف الوسائط."
   }
 }

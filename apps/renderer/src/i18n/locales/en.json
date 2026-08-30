@@ -56,5 +56,22 @@
   },
   "anki": {
     "export": "Export to Anki"
+  },
+  "errors": {
+    "generic": "Something went wrong.",
+    "dictionary.not_found": "That dictionary no longer exists.",
+    "favorite.not_found": "That favorite no longer exists.",
+    "dictionary.import.unsupported_format": "That file isn't a dictionary format Lughat recognizes.",
+    "dictionary.import.source_missing": "That file couldn't be found.",
+    "dictionary.import.missing_file": "One of the dictionary's files is missing.",
+    "dictionary.import.corrupt_header": "That dictionary file is corrupted or malformed.",
+    "dictionary.import.corrupt_index": "That dictionary's index is corrupted.",
+    "dictionary.import.corrupt_block": "That dictionary file has a corrupted section.",
+    "dictionary.import.malformed_row": "That dictionary file has a malformed entry.",
+    "dictionary.import.unsupported_version": "That dictionary file's format version isn't supported.",
+    "dictionary.import.unsupported_compression": "That dictionary file's compression isn't supported.",
+    "dictionary.import.encrypted_unsupported": "That dictionary file is encrypted, which isn't supported.",
+    "dictionary.import.lzo_unsupported": "That dictionary file uses LZO compression, which isn't supported.",
+    "media.not_found": "That media file couldn't be found."
   }
 }

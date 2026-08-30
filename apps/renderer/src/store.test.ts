@@ -1,18 +1,32 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from './store';
-import { api } from './api';
+import { api, EngineApiError } from './api';
 import type { EngineInfo } from './global';
 import type { SearchHit } from './api';
 
-vi.mock('./api', () => ({
-  api: {
-    lookup: vi.fn(),
-    search: vi.fn(),
-    history: vi.fn().mockResolvedValue([]),
+vi.mock('./api', async () => {
+  const actual = await vi.importActual<typeof import('./api')>('./api');
+  return {
+    EngineApiError: actual.EngineApiError,
+    api: {
+      lookup: vi.fn(),
+      search: vi.fn(),
+      history: vi.fn().mockResolvedValue([]),
+      importDictionary: vi.fn(),
+      listDictionaries: vi.fn(),
+    },
+  };
+});
+
+vi.mock('./i18n', () => ({
+  default: {
+    changeLanguage: vi.fn(),
+    exists: vi.fn().mockReturnValue(true),
+    t: vi.fn((key: string) => key),
   },
 }));
 
-vi.mock('./i18n', () => ({ default: { changeLanguage: vi.fn() } }));
+vi.mock('@mantine/notifications', () => ({ notifications: { show: vi.fn() } }));
 
 const engine: EngineInfo = { baseUrl: 'http://127.0.0.1:12345', token: 'test-token' };
 
@@ -89,5 +103,26 @@ describe('store: lookup tabs, suggestions, and back/forward navigation', () => {
     const tab = useAppStore.getState().tabs[0];
     expect(tab.entries.map((e) => e.term)).toEqual(['apple', 'tree']);
     expect(tab.activeIndex).toBe(1);
+  });
+});
+
+describe('store: surfacing failed engine calls instead of failing silently', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+    useAppStore.setState({ dictionaries: [], engineInfo: null });
+  });
+
+  it('importDictionaryPath shows a notification and leaves the dictionary list unchanged on failure', async () => {
+    useAppStore.setState({ engineInfo: engine, dictionaries: [] });
+    vi.mocked(api.importDictionary).mockRejectedValue(
+      new EngineApiError('dictionary.import.unsupported_format', "that file isn't a dictionary"),
+    );
+    const { notifications } = await import('@mantine/notifications');
+
+    await expect(useAppStore.getState().importDictionaryPath('/tmp/not-a-dictionary.xyz')).resolves.toBeUndefined();
+
+    expect(notifications.show).toHaveBeenCalledTimes(1);
+    expect(api.listDictionaries).not.toHaveBeenCalled();
+    expect(useAppStore.getState().dictionaries).toEqual([]);
   });
 });

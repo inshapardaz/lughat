@@ -10,6 +10,7 @@ import {
 } from './api';
 import type { EngineInfo } from './global';
 import i18n from './i18n';
+import { notifyError } from './notifyError';
 
 export interface TabEntry {
   term: string;
@@ -114,69 +115,97 @@ export const useAppStore = create<AppState>((set, get) => ({
   importDictionaryPath: async (path) => {
     const engine = get().engineInfo;
     if (!engine) return;
-    await api.importDictionary(engine, path);
-    await get().loadDictionaries();
+    try {
+      await api.importDictionary(engine, path);
+      await get().loadDictionaries();
+    } catch (error) {
+      notifyError(error, 'dictionaries.import');
+    }
   },
 
   removeDictionary: async (id) => {
     const engine = get().engineInfo;
     if (!engine) return;
-    await api.removeDictionary(engine, id);
-    await get().loadDictionaries();
+    try {
+      await api.removeDictionary(engine, id);
+      await get().loadDictionaries();
+    } catch (error) {
+      notifyError(error, 'dictionaries.remove');
+    }
   },
 
   setDictionaryEnabled: async (id, enabled) => {
     const engine = get().engineInfo;
     if (!engine) return;
-    await api.setDictionaryEnabled(engine, id, enabled);
-    await get().loadDictionaries();
+    try {
+      await api.setDictionaryEnabled(engine, id, enabled);
+      await get().loadDictionaries();
+    } catch (error) {
+      notifyError(error, 'dictionaries.title');
+    }
   },
 
   reorderDictionary: async (id, groupId, sortOrder) => {
     const engine = get().engineInfo;
     if (!engine) return;
-    await api.reorderDictionary(engine, id, groupId, sortOrder);
-    await get().loadDictionaries();
+    try {
+      await api.reorderDictionary(engine, id, groupId, sortOrder);
+      await get().loadDictionaries();
+    } catch (error) {
+      notifyError(error, 'dictionaries.title');
+    }
   },
 
   runSearch: async (query, mode) => {
     const engine = get().engineInfo;
     if (!engine || query.trim().length === 0) return;
-    const hits = await api.search(engine, query, mode);
-    const id = `search:${query}`;
-    set((state) => ({
-      tabs: upsertTab(state.tabs, { id, entries: [{ term: query, hits }], activeIndex: 0 }),
-      activeTabId: id,
-    }));
+    try {
+      const hits = await api.search(engine, query, mode);
+      const id = `search:${query}`;
+      set((state) => ({
+        tabs: upsertTab(state.tabs, { id, entries: [{ term: query, hits }], activeIndex: 0 }),
+        activeTabId: id,
+      }));
+    } catch (error) {
+      notifyError(error, 'nav.search');
+    }
   },
 
   openLookupTab: async (term) => {
     const engine = get().engineInfo;
     if (!engine || term.trim().length === 0) return;
-    const entry = await lookupWithSuggestions(engine, term);
-    const id = `lookup:${term}`;
-    set((state) => ({
-      tabs: upsertTab(state.tabs, { id, entries: [entry], activeIndex: 0 }),
-      activeTabId: id,
-    }));
-    await get().loadHistory();
+    try {
+      const entry = await lookupWithSuggestions(engine, term);
+      const id = `lookup:${term}`;
+      set((state) => ({
+        tabs: upsertTab(state.tabs, { id, entries: [entry], activeIndex: 0 }),
+        activeTabId: id,
+      }));
+      await get().loadHistory();
+    } catch (error) {
+      notifyError(error, 'nav.search');
+    }
   },
 
   navigateInTab: async (tabId, term) => {
     const engine = get().engineInfo;
     if (!engine || term.trim().length === 0) return;
-    const entry = await lookupWithSuggestions(engine, term);
+    try {
+      const entry = await lookupWithSuggestions(engine, term);
 
-    set((state) => ({
-      tabs: state.tabs.map((tab) => {
-        if (tab.id !== tabId) return tab;
-        // Standard back/forward semantics: navigating from a point you'd gone back to
-        // discards whatever forward history existed past it.
-        const entries = [...tab.entries.slice(0, tab.activeIndex + 1), entry];
-        return { ...tab, entries, activeIndex: entries.length - 1 };
-      }),
-    }));
-    await get().loadHistory();
+      set((state) => ({
+        tabs: state.tabs.map((tab) => {
+          if (tab.id !== tabId) return tab;
+          // Standard back/forward semantics: navigating from a point you'd gone back to
+          // discards whatever forward history existed past it.
+          const entries = [...tab.entries.slice(0, tab.activeIndex + 1), entry];
+          return { ...tab, entries, activeIndex: entries.length - 1 };
+        }),
+      }));
+      await get().loadHistory();
+    } catch (error) {
+      notifyError(error, 'nav.search');
+    }
   },
 
   goBack: (tabId) => {
@@ -222,22 +251,34 @@ export const useAppStore = create<AppState>((set, get) => ({
   addFavorite: async (term, dictionaryId) => {
     const engine = get().engineInfo;
     if (!engine) return;
-    await api.addFavorite(engine, term, dictionaryId);
-    await get().loadFavorites();
+    try {
+      await api.addFavorite(engine, term, dictionaryId);
+      await get().loadFavorites();
+    } catch (error) {
+      notifyError(error, 'favorites.add');
+    }
   },
 
   removeFavorite: async (id) => {
     const engine = get().engineInfo;
     if (!engine) return;
-    await api.removeFavorite(engine, id);
-    await get().loadFavorites();
+    try {
+      await api.removeFavorite(engine, id);
+      await get().loadFavorites();
+    } catch (error) {
+      notifyError(error, 'favorites.remove');
+    }
   },
 
   setTheme: async (theme) => {
     set({ theme });
     const engine = get().engineInfo;
     if (engine) {
-      await api.setSetting(engine, 'appearance.theme', theme);
+      try {
+        await api.setSetting(engine, 'appearance.theme', theme);
+      } catch (error) {
+        notifyError(error, 'settings.title');
+      }
     }
   },
 
@@ -250,7 +291,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     await i18n.changeLanguage(language);
     const engine = get().engineInfo;
     if (engine) {
-      await api.setSetting(engine, 'ui.language', language);
+      try {
+        await api.setSetting(engine, 'ui.language', language);
+      } catch (error) {
+        notifyError(error, 'settings.title');
+      }
     }
   },
 

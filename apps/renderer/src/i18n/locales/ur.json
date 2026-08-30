@@ -56,5 +56,22 @@
   },
   "anki": {
     "export": "Anki میں برآمد کریں"
+  },
+  "errors": {
+    "generic": "کچھ غلط ہو گیا۔",
+    "dictionary.not_found": "یہ لغت اب موجود نہیں ہے۔",
+    "favorite.not_found": "یہ پسندیدہ اندراج اب موجود نہیں ہے۔",
+    "dictionary.import.unsupported_format": "یہ فائل کسی معلوم لغت فارمیٹ میں نہیں ہے۔",
+    "dictionary.import.source_missing": "یہ فائل نہیں ملی۔",
+    "dictionary.import.missing_file": "اس لغت کی ایک ضروری فائل موجود نہیں ہے۔",
+    "dictionary.import.corrupt_header": "یہ لغت فائل خراب یا غلط ہے۔",
+    "dictionary.import.corrupt_index": "اس لغت کا اشاریہ خراب ہے۔",
+    "dictionary.import.corrupt_block": "اس لغت فائل کا ایک حصہ خراب ہے۔",
+    "dictionary.import.malformed_row": "اس لغت فائل میں ایک غلط اندراج ہے۔",
+    "dictionary.import.unsupported_version": "اس لغت فائل کا ورژن معاون نہیں ہے۔",
+    "dictionary.import.unsupported_compression": "اس لغت فائل کی کمپریشن معاون نہیں ہے۔",
+    "dictionary.import.encrypted_unsupported": "یہ لغت فائل خفیہ کردہ ہے، جو معاون نہیں ہے۔",
+    "dictionary.import.lzo_unsupported": "یہ لغت فائل LZO کمپریشن استعمال کرتی ہے، جو معاون نہیں ہے۔",
+    "media.not_found": "میڈیا فائل نہیں ملی۔"
   }
 }
